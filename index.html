@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/PNG" href="univ.PNG">
-    <link rel="apple-touch-icon" href="univ.PNG">
     <title>Université Côte d'Azur & Réseau IUT | Portail d'Actualités</title>
     
-    <!-- Tailwind CSS CDN -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -18,49 +16,32 @@
                         uca: {
                             blue: '#0055A5',
                             cyan: '#00A8E8',
-                            dark: '#0B132B',
-                            card: '#1C2541',
-                            accent: '#FF007F',
-                            gold: '#FFB703'
+                            dark: '#070A13',
+                            panel: '#0F172A',
+                            accent: '#FF007F'
                         }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
                     }
                 }
             }
         }
     </script>
-    
-    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Three.js CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <style>
         body {
             font-family: 'Inter', sans-serif;
             background-color: #070a13;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(0, 85, 165, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(0, 168, 232, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
             color: #f1f5f9;
-            overflow-x: hidden;
-        }
-
-        #bg-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 0;
-            pointer-events: none;
         }
 
         .glass-panel {
-            background: rgba(15, 23, 42, 0.75);
+            background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
@@ -68,7 +49,7 @@
             background: rgba(30, 41, 59, 0.6);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
         }
 
         .glass-card:hover {
@@ -76,700 +57,208 @@
             border-color: rgba(0, 168, 232, 0.4);
             box-shadow: 0 12px 30px -10px rgba(0, 168, 232, 0.25);
         }
-
-        .neon-glow-pink {
-            box-shadow: 0 0 20px rgba(255, 0, 127, 0.4);
-        }
-
-        .neon-glow-blue {
-            box-shadow: 0 0 20px rgba(0, 168, 232, 0.4);
-        }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #070a13;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #1e293b;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #00A8E8;
-        }
     </style>
 </head>
-<body class="relative min-h-screen text-slate-100 antialiased selection:bg-uca-cyan selection:text-black">
+<body class="min-h-screen antialiased flex flex-col justify-between">
 
-<canvas id="bg-canvas"></canvas>
-
-<header class="fixed top-0 left-0 right-0 z-40 glass-panel border-b border-slate-800/80 transition-all duration-300">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-20">
-            
-            <!-- Logo & Title -->
-            <div class="flex items-center gap-3">
-                <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-uca-blue via-uca-cyan to-pink-500 flex items-center justify-center shadow-lg shadow-uca-cyan/20">
-                    <i class="fa-solid font-bold text-xl text-white fa-graduation-cap"></i>
+    <!-- HEADER RESPONSIVE -->
+    <header class="fixed top-0 left-0 right-0 z-40 glass-panel border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-uca-blue to-uca-cyan flex items-center justify-center shadow-lg">
+                        <i class="fa-solid fa-graduation-cap text-xl text-white"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs uppercase tracking-widest font-semibold text-uca-cyan block">Université Côte d'Azur</span>
+                        <h1 class="text-lg font-bold text-white">Portail IUT & Actualités</h1>
+                    </div>
                 </div>
-                <div>
-                    <span class="text-xs uppercase tracking-widest font-semibold text-uca-cyan block">Université Côte d'Azur</span>
-                    <h1 class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">
-                        Portail IUT & Actualités
-                    </h1>
-                </div>
-            </div>
 
-            <!-- Desktop Navigation Links -->
-            <nav class="hidden md:flex items-center space-x-1 lg:space-x-2">
-                <a href="#news-section" class="px-3 py-2 rounded-lg text-sm font-medium hover:text-uca-cyan hover:bg-slate-800/50 transition">Actualités</a>
-                <a href="#formations" onclick="openModal('Formations Universitaires', 'Découvrez l\'ensemble des B.U.T. (Bachelors Universitaires de Technologie), Licences Professionnelles et Masters dispensés par l\'IUT Nice Côte d\'Azur et le réseau national des IUT. Nos diplômes sont structurés autour de compétences métiers fortes, de stages en entreprise et de projets tutorés innovants.')" class="px-3 py-2 rounded-lg text-sm font-medium hover:text-uca-cyan hover:bg-slate-800/50 transition">Formations</a>
-                <a href="#iut-nice" onclick="openModal('IUT Nice Côte d\'Azur', 'L\'IUT Nice Côte d’Azur accueille plus de 2 500 étudiants répartis sur plusieurs sites (Fabron, Sophia Antipolis, Menton, Cannes). Il propose des cursus modernes dans le domaine du numérique, du génie électrique, de la gestion des entreprises, du journalisme et des techniques de commercialisation.')" class="px-3 py-2 rounded-lg text-sm font-medium hover:text-uca-cyan hover:bg-slate-800/50 transition">IUT Nice</a>
-                <a href="#reseau-iut" onclick="openModal('Réseau des 108 IUTs de France', 'Le réseau national des IUT regroupe 108 instituts répartis sur tout le territoire français. Il garantit une qualité d\'enseignement uniforme et une proximité étroite avec les entreprises et l\'écosystème industriel local.')" class="px-3 py-2 rounded-lg text-sm font-medium hover:text-uca-cyan hover:bg-slate-800/50 transition">Réseau IUTs</a>
-                <a href="#campus" onclick="openModal('Vie Étudiante & Campus', 'Profitez d\'un cadre d\'études exceptionnel sur la Côte d\'Azur ! Accédez aux services du CROUS, aux bibliothèques universitaires modernes, aux installations sportives universitaires (SUAPS) et au tissu associatif étudiant dynamique.')" class="px-3 py-2 rounded-lg text-sm font-medium hover:text-uca-cyan hover:bg-slate-800/50 transition">Vie Étudiante</a>
-            </nav>
+                <!-- Navigation Desktop -->
+                <nav class="hidden md:flex items-center space-x-2">
+                    <a href="#news-section" class="px-3 py-2 rounded-lg text-sm font-medium hover:text-uca-cyan transition">Actualités</a>
+                    <a href="#" onclick="openInfoModal('Formations', 'Découvrez les B.U.T. (Bachelors Universitaires de Technologie) dispensés à Nice, Sophia-Antipolis, Cannes et Menton.')" class="px-3 py-2 rounded-lg text-sm font-medium hover:text-uca-cyan transition">Formations</a>
+                    <a href="#" onclick="openInfoModal('IUT Nice', 'L\'IUT Nice Côte d’Azur accueille plus de 2 500 étudiants répartis sur 4 sites avec des équipements technologiques d\'excellence.')" class="px-3 py-2 rounded-lg text-sm font-medium hover:text-uca-cyan transition">IUT Nice</a>
+                    <a href="#" onclick="openInfoModal('Réseau IUTs', 'Le réseau national regroupe 108 IUTs partout en France pour un enseignement ancré dans l\'industrie.')" class="px-3 py-2 rounded-lg text-sm font-medium hover:text-uca-cyan transition">Réseau IUTs</a>
+                </nav>
 
-            <!-- Actions Header -->
-            <div class="hidden lg:flex items-center gap-3">
-                <button onclick="document.getElementById('news-section').scrollIntoView({behavior: 'smooth'})" class="px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg bg-gradient-to-r from-uca-blue to-uca-cyan text-white shadow-md hover:brightness-110 transition">
-                    <i class="fa-solid fa-newspaper mr-1.5"></i> Direct News
-                </button>
-            </div>
-
-            <!-- Mobile Hamburger Button -->
-            <div class="flex md:hidden">
-                <button id="mobile-menu-btn" aria-label="Menu Mobile" class="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 focus:outline-none">
+                <!-- Hamburger Mobile -->
+                <button id="menu-btn" class="md:hidden p-2 text-slate-300 hover:text-white">
                     <i class="fa-solid fa-bars text-2xl"></i>
                 </button>
             </div>
-
         </div>
-    </div>
 
-    <div id="mobile-menu" class="hidden md:hidden glass-panel border-b border-slate-800 px-4 pt-2 pb-6 space-y-3">
-        <a href="#news-section" class="mobile-nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-200 hover:bg-slate-800 hover:text-uca-cyan">Actualités Direct</a>
-        <a href="#formations" onclick="openModal('Formations Universitaires', 'Découvrez les B.U.T. et diplômes de l\'IUT Nice Côte d\'Azur.')" class="mobile-nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-200 hover:bg-slate-800 hover:text-uca-cyan">Formations & BUT</a>
-        <a href="#iut-nice" onclick="openModal('IUT Nice Côte d\'Azur', 'Informations détaillées sur le campus de Nice, Fabron et Sophia.')" class="mobile-nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-200 hover:bg-slate-800 hover:text-uca-cyan">IUT Nice Côte d'Azur</a>
-        <a href="#reseau-iut" onclick="openModal('Réseau des 108 IUTs de France', 'Actualités du réseau national des Instituts Universitaires de Technologie.')" class="mobile-nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-200 hover:bg-slate-800 hover:text-uca-cyan">Réseau IUTs France</a>
-        <a href="#campus" onclick="openModal('Vie Étudiante & Campus', 'CROUS, Logements, Sport et culture à l\'Université Côte d\'Azur.')" class="mobile-nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-200 hover:bg-slate-800 hover:text-uca-cyan">Vie Étudiante & Services</a>
-        <div class="pt-2">
-            <button onclick="document.getElementById('news-section').scrollIntoView({behavior: 'smooth'})" class="w-full py-2.5 text-center font-semibold text-xs tracking-wider uppercase rounded-lg bg-uca-cyan text-slate-950">
-                Explorer les actualités
-            </button>
+        <!-- Menu Mobile Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden glass-panel px-4 py-4 space-y-2 border-t border-slate-800">
+            <a href="#news-section" class="block px-3 py-2 rounded-md hover:bg-slate-800">Actualités Direct</a>
+            <a href="#" onclick="openInfoModal('Formations', 'Catalogue complet des diplômes B.U.T.')" class="block px-3 py-2 rounded-md hover:bg-slate-800">Formations</a>
+            <a href="#" onclick="openInfoModal('IUT Nice', 'Coordonnées et détails des Campus Fabron & Sophia.')" class="block px-3 py-2 rounded-md hover:bg-slate-800">IUT Nice Côte d'Azur</a>
         </div>
-    </div>
-</header>
+    </header>
 
-<main class="relative z-10 pt-28 pb-16">
-
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12">
-        <div class="text-center max-w-3xl mx-auto">
-            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-panel text-xs font-semibold text-uca-cyan mb-6 border border-uca-cyan/30">
-                <span class="flex h-2 w-2 rounded-full bg-uca-cyan animate-ping"></span>
-                <span>Portail Académique Officiel & Flux d'Informations</span>
-            </div>
-            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-6">
-                L'Excellence Universitaire sur la <span class="bg-clip-text text-transparent bg-gradient-to-r from-uca-cyan via-blue-400 to-uca-accent">Côte d'Azur</span>
+    <main class="pt-28 pb-16 flex-1">
+        
+        <!-- HERO SECTION -->
+        <section class="max-w-7xl mx-auto px-4 text-center py-12">
+            <h1 class="text-4xl sm:text-6xl font-extrabold text-white mb-6">
+                L'Excellence Académique sur la <span class="bg-clip-text text-transparent bg-gradient-to-r from-uca-cyan to-pink-500">Côte d'Azur</span>
             </h1>
-            <p class="text-lg text-slate-300 leading-relaxed mb-8">
-                Consultez en direct les dernières informations académiques, les innovations pédagogiques de l'<strong>IUT Nice Côte d'Azur</strong>, du réseau national des IUTs et la veille scientifique & technologique.
+            <p class="text-slate-300 max-w-2xl mx-auto text-base sm:text-lg mb-8">
+                Consultez en direct les flux d'informations officielles de l'IUT Nice, du réseau national des IUTs et la veille technologique Dev.to.
             </p>
-            <div class="flex flex-wrap items-center justify-center gap-4">
-                <a href="#news-section" class="px-6 py-3.5 rounded-xl bg-gradient-to-r from-uca-blue via-uca-cyan to-blue-600 text-white font-semibold text-sm shadow-lg shadow-uca-cyan/25 hover:shadow-uca-cyan/40 hover:scale-105 transition-all duration-300">
-                    <i class="fa-solid fa-newspaper mr-2"></i> Explorer les Actualités
-                </a>
-                <button onclick="openModal('À propos du Portail', 'Ce portail regroupe en un seul endroit les flux d\'informations stratégiques, scientifiques et pédagogiques de l\'Université Côte d\'Azur et des 108 IUTs de France, avec des passerelles vers les communautés tech et recherche.')" class="px-6 py-3.5 rounded-xl glass-panel text-slate-200 hover:text-white font-semibold text-sm hover:bg-slate-800/80 transition">
-                    <i class="fa-solid fa-circle-info mr-2"></i> En savoir plus
+        </section>
+
+        <!-- FLUX ACTUALITÉS -->
+        <section id="news-section" class="max-w-7xl mx-auto px-4 py-8">
+            <div class="glass-panel p-4 rounded-2xl mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-rss text-uca-cyan"></i> Actualités Universitaires & Tech
+                </h2>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="filterNews('all')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-uca-cyan text-slate-950">Tous</button>
+                    <button onclick="filterNews('nice')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white">IUT Nice</button>
+                    <button onclick="filterNews('devto')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white">Dev.to API</button>
+                </div>
+            </div>
+
+            <div id="news-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Articles générés par JS -->
+            </div>
+        </section>
+
+        <!-- SECTION INTERMÉDIAIRE : SURPRISE DE PAUSE -->
+        <section class="max-w-7xl mx-auto px-4 my-16">
+            <div class="rounded-3xl p-8 sm:p-12 glass-panel border border-pink-500/30 bg-gradient-to-r from-slate-900 via-purple-950/40 to-slate-900 flex flex-col md:flex-row items-center justify-between gap-8">
+                <div class="space-y-3 max-w-xl text-center md:text-left">
+                    <span class="px-3 py-1 rounded-full bg-pink-500/20 text-pink-300 text-xs font-bold uppercase">Zone de Décompression</span>
+                    <h3 class="text-2xl sm:text-3xl font-extrabold text-white">Besoin d'une Pause après les Révisions ?</h3>
+                    <p class="text-sm text-slate-300">Profitez d'un espace rétro interactif directement nettoyé et propulsé en temps réel par le serveur Python (BS4).</p>
+                </div>
+                <button onclick="openViceCityProxy()" class="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-2xl shadow-xl hover:scale-105 transition">
+                    <i class="fa-solid fa-gamepad mr-2"></i> Lancer la Pause Étudiante
                 </button>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <section id="news-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <!-- Filter Pills Bar -->
-        <div class="glass-panel rounded-2xl p-4 mb-8">
-            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                
+    </main>
+
+    <!-- OVERLAY VICE CITY (PROPRIÉTÉ DU SERVEUR PYTHON BS4) -->
+    <div id="vice-overlay" class="fixed inset-0 z-50 hidden bg-slate-950/90 backdrop-blur-xl p-4 flex flex-col">
+        <div class="flex items-center justify-between p-4 glass-panel rounded-xl mb-4">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-shield-halved text-pink-500 text-2xl"></i>
                 <div>
-                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-rss text-uca-cyan"></i>
-                        Flux d'Actualités en Direct
-                    </h2>
-                    <p class="text-xs text-slate-400">Filtrer par catégorie ou source académique</p>
-                </div>
-
-                <!-- Filter Buttons -->
-                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto" id="filter-container">
-                    <button onclick="setFilter('all')" data-filter="all" class="filter-btn active px-4 py-2 rounded-xl text-xs font-semibold bg-uca-cyan text-slate-950 shadow-md transition">
-                        Tous les flux
-                    </button>
-                    <button onclick="setFilter('nice')" data-filter="nice" class="filter-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700 transition">
-                        IUT Nice Côte d'Azur
-                    </button>
-                    <button onclick="setFilter('france')" data-filter="france" class="filter-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700 transition">
-                        IUTs de France
-                    </button>
-                    <button onclick="setFilter('education')" data-filter="education" class="filter-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700 transition">
-                        Éducation & Recherche
-                    </button>
-                    <button onclick="setFilter('devto')" data-filter="devto" class="filter-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700 transition">
-                        <i class="fa-brands fa-dev mr-1"></i> Tech & Dev.to
-                    </button>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- News Cards Grid -->
-        <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Dynamic news inserted via JS -->
-            <div class="col-span-full py-12 text-center text-slate-400">
-                <i class="fa-solid fa-circle-notch fa-spin text-3xl text-uca-cyan mb-3"></i>
-                <p>Chargement des actualités universitaires...</p>
-            </div>
-        </div>
-
-    </section>
-
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-16">
-        <div class="relative rounded-3xl overflow-hidden glass-panel p-8 sm:p-12 border border-pink-500/30 bg-gradient-to-r from-slate-900/90 via-purple-950/40 to-slate-900/90 shadow-2xl">
-            <!-- Decorative ambient glow -->
-            <div class="absolute -top-24 -right-24 w-96 h-96 bg-pink-600/20 rounded-full blur-3xl pointer-events-none"></div>
-            <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-uca-cyan/20 rounded-full blur-3xl pointer-events-none"></div>
-
-            <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-                <div class="space-y-4 max-w-xl text-center md:text-left">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-500/20 border border-pink-500/40 text-pink-300 text-xs font-bold uppercase tracking-widest">
-                        <i class="fa-solid fa-gamepad"></i> Zone de Décompression Étudiante
-                    </div>
-                    <h3 class="text-2xl sm:text-3xl font-extrabold text-white">
-                        Besoin d'une Pause Après les Révisions ?
-                    </h3>
-                    <p class="text-sm text-slate-300 leading-relaxed">
-                        Un espace de détente virtuel interactif à découvrir en exclusivité au milieu de votre navigation. Une petite surprise nostalgique rétro vous attend !
-                    </p>
-                </div>
-
-                <div class="flex-shrink-0">
-                    <button onclick="openViceCity()" class="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-300 bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 rounded-2xl shadow-xl hover:shadow-pink-500/30 hover:scale-105 active:scale-95">
-                        <span class="absolute inset-0 w-full h-full bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                        <i class="fa-solid fa-play text-lg mr-3 group-hover:animate-bounce"></i>
-                        <span>Lancer la Pause Rétro Secrète</span>
-                    </button>
+                    <h3 class="text-sm font-bold text-white uppercase">Espace Détente • Python BS4 Proxy Relay</h3>
+                    <p class="text-xs text-slate-400">Contournement CORS & X-Frame-Options Actif</p>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-            <div class="glass-card p-6 rounded-2xl text-center">
-                <span class="block text-3xl sm:text-4xl font-extrabold text-uca-cyan mb-1">108</span>
-                <span class="text-xs uppercase font-semibold tracking-wider text-slate-400">IUTs en France</span>
-            </div>
-            <div class="glass-card p-6 rounded-2xl text-center">
-                <span class="block text-3xl sm:text-4xl font-extrabold text-pink-500 mb-1">2 500+</span>
-                <span class="text-xs uppercase font-semibold tracking-wider text-slate-400">Étudiants IUT Nice</span>
-            </div>
-            <div class="glass-card p-6 rounded-2xl text-center">
-                <span class="block text-3xl sm:text-4xl font-extrabold text-uca-gold mb-1">24</span>
-                <span class="text-xs uppercase font-semibold tracking-wider text-slate-400">Spécialités B.U.T.</span>
-            </div>
-            <div class="glass-card p-6 rounded-2xl text-center">
-                <span class="block text-3xl sm:text-4xl font-extrabold text-emerald-400 mb-1">92%</span>
-                <span class="text-xs uppercase font-semibold tracking-wider text-slate-400">Insertion Pro & Poursuite</span>
-            </div>
-        </div>
-    </section>
-
-</main>
-
-<div id="vice-city-overlay" class="fixed inset-0 z-50 hidden bg-slate-950/90 backdrop-blur-xl flex flex-col justify-between items-center p-2 sm:p-6 transition-all duration-300">
-    <!-- Header of Vice City Modal -->
-    <div class="w-full max-w-7xl flex items-center justify-between p-3 glass-panel rounded-2xl mb-2">
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-lg bg-pink-600 flex items-center justify-center text-white font-bold shadow-lg shadow-pink-500/50">
-                <i class="fa-solid fa-gamepad"></i>
-            </div>
-            <div>
-                <h3 class="text-sm font-bold text-white uppercase tracking-wider">Espace Détente Étudiant • Vice City Online</h3>
-                <span class="text-xs text-slate-400">Session de pause active</span>
-            </div>
-        </div>
-
-        <button onclick="closeViceCity()" class="px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold transition flex items-center gap-2">
-            <i class="fa-solid fa-xmark text-sm"></i> Fermer & Revenir au Site
-        </button>
-    </div>
-
-    <!-- Iframe Container -->
-    <div class="w-full max-w-7xl flex-1 rounded-2xl overflow-hidden border border-slate-700 bg-black shadow-2xl relative">
-        <iframe id="vice-city-iframe" class="w-full h-full border-0" src="" allowfullscreen title="Espace Interactif Vice City"></iframe>
-    </div>
-</div>
-
-<div id="info-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="glass-panel w-full max-w-2xl rounded-3xl p-6 sm:p-8 border border-slate-700 shadow-2xl max-h-[85vh] flex flex-col">
-        <div class="flex items-center justify-between pb-4 border-b border-slate-800">
-            <h3 id="modal-title" class="text-xl font-bold text-white flex items-center gap-2">
-                <!-- Modal title inserted here -->
-            </h3>
-            <button onclick="closeModal()" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition">
-                <i class="fa-solid fa-xmark text-xl"></i>
+            <button onclick="closeViceCityProxy()" class="px-4 py-2 bg-pink-600 text-white font-bold rounded-xl text-xs">
+                Fermer & Revenir
             </button>
         </div>
         
-        <div id="modal-body" class="py-6 text-sm text-slate-300 leading-relaxed overflow-y-auto space-y-4">
-            <!-- Content dynamically generated -->
-        </div>
-
-        <div class="pt-4 border-t border-slate-800 flex justify-end">
-            <button onclick="closeModal()" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold transition">
-                Fermer
-            </button>
+        <div class="flex-1 rounded-2xl overflow-hidden bg-black border border-slate-700 relative">
+            <iframe id="game-iframe" class="w-full h-full border-0" src="" allowfullscreen></iframe>
         </div>
     </div>
-</div>
 
-<footer class="relative z-10 glass-panel border-t border-slate-800/80 pt-16 pb-12 mt-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 pb-12 border-b border-slate-800">
-            
-            <!-- Col 1: Presentation -->
-            <div class="lg:col-span-2 space-y-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-uca-blue to-uca-cyan flex items-center justify-center text-white">
-                        <i class="fa-solid fa-graduation-cap text-lg"></i>
-                    </div>
-                    <span class="text-base font-bold text-white">Université Côte d'Azur</span>
-                </div>
-                <p class="text-xs text-slate-400 leading-relaxed max-w-sm">
-                    L'IUT Nice Côte d'Azur prépare les étudiants aux grands défis de demain grâce à des diplômes technologiques d'excellence (B.U.T.) intégrés au réseau national de l'enseignement supérieur.
-                </p>
-                <div class="flex items-center space-x-3 pt-2">
-                    <a href="https://twitter.com" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300 hover:text-uca-cyan hover:bg-slate-700 transition" aria-label="Twitter">
-                        <i class="fa-brands fa-x-twitter"></i>
-                    </a>
-                    <a href="https://linkedin.com" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300 hover:text-uca-cyan hover:bg-slate-700 transition" aria-label="LinkedIn">
-                        <i class="fa-brands fa-linkedin-in"></i>
-                    </a>
-                    <a href="https://facebook.com" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300 hover:text-uca-cyan hover:bg-slate-700 transition" aria-label="Facebook">
-                        <i class="fa-brands fa-facebook-f"></i>
-                    </a>
-                    <a href="https://instagram.com" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300 hover:text-uca-cyan hover:bg-slate-700 transition" aria-label="Instagram">
-                        <i class="fa-brands fa-instagram"></i>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Col 2: Accès Rapides -->
-            <div>
-                <h4 class="text-xs font-bold text-white uppercase tracking-wider mb-4">Accès Rapides</h4>
-                <ul class="space-y-2.5 text-xs text-slate-400">
-                    <li><a href="#iut-nice" onclick="openModal('IUT Nice Côte d\'Azur', 'Coordonnées du Campus Fabron : 41 Boulevard Napoléon III, 06200 Nice. Téléphone : 04 89 15 30 00.')" class="hover:text-uca-cyan transition">Campus Fabron (Nice)</a></li>
-                    <li><a href="#sophia" onclick="openModal('Campus Sophia Antipolis', 'Coordonnées du Campus Sophia Antipolis : 930 Route des Colles, 06903 Sophia Antipolis.')" class="hover:text-uca-cyan transition">Campus Sophia Antipolis</a></li>
-                    <li><a href="#menton" onclick="openModal('Campus Menton & Cannes', 'Formations en Carrières Sociales à Menton et Techniques de Commercialisation / CanneIUT.')" class="hover:text-uca-cyan transition">Campus Menton & Cannes</a></li>
-                    <li><a href="#crous" onclick="openModal('CROUS Nice-Toulon', 'Pour vos demandes de bourse, logement CROUS et restauration universitaire, consultez le site officiel du CROUS Nice-Toulon (crous-nice.fr).')" class="hover:text-uca-cyan transition">CROUS & Restauration</a></li>
-                    <li><a href="#bu" onclick="openModal('Bibliothèques Universitaires', 'Les BU de l\'Université Côte d\'Azur mettent à disposition des milliers de ressources numériques, salles de travail collaboratives et accompagnement à la recherche.')" class="hover:text-uca-cyan transition">Bibliothèques BU</a></li>
-                </ul>
-            </div>
-
-            <!-- Col 3: Offre Pédagogique -->
-            <div>
-                <h4 class="text-xs font-bold text-white uppercase tracking-wider mb-4">Formations B.U.T.</h4>
-                <ul class="space-y-2.5 text-xs text-slate-400">
-                    <li><a href="#" onclick="openModal('B.U.T. Informatique', 'Le B.U.T. Informatique forme des développeurs, administrateurs réseaux et concepteurs d\'applications informatiques maîtrisant le développement web, mobile et logiciel.')" class="hover:text-uca-cyan transition">B.U.T. Informatique</a></li>
-                    <li><a href="#" onclick="openModal('B.U.T. GEII', 'Génie Électrique et Informatique Industrielle : robotique, systèmes embarqués et énergies renouvelables.')" class="hover:text-uca-cyan transition">B.U.T. GEII</a></li>
-                    <li><a href="#" onclick="openModal('B.U.T. TC', 'Techniques de Commercialisation : marketing digital, négociation commerciale et développement international.')" class="hover:text-uca-cyan transition">B.U.T. Tech de Co</a></li>
-                    <li><a href="#" onclick="openModal('B.U.T. GEA', 'Gestion des Entreprises et des Administrations : finance, comptabilité et ressources humaines.')" class="hover:text-uca-cyan transition">B.U.T. GEA</a></li>
-                    <li><a href="#" onclick="openModal('B.U.T. InfoCom', 'Information Communication : journalisme, communication des organisations et métiers du numérique.')" class="hover:text-uca-cyan transition">B.U.T. InfoCom</a></li>
-                </ul>
-            </div>
-
-            <!-- Col 4: Newsletter -->
-            <div>
-                <h4 class="text-xs font-bold text-white uppercase tracking-wider mb-4">Newsletter Info</h4>
-                <p class="text-xs text-slate-400 mb-3">Recevez le récapitulatif mensuel des actualités universitaires.</p>
-                <form onsubmit="handleNewsletter(event)" class="space-y-2">
-                    <input type="email" required placeholder="votre.email@etu.univ-cotedazur.fr" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-uca-cyan">
-                    <button type="submit" class="w-full py-2 bg-uca-cyan text-slate-950 font-bold text-xs rounded-xl hover:bg-cyan-400 transition">
-                        S'abonner
-                    </button>
-                </form>
-            </div>
-
+    <!-- MODAL INFO -->
+    <div id="info-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-lg rounded-2xl p-6 space-y-4">
+            <h3 id="modal-title" class="text-xl font-bold text-white"></h3>
+            <p id="modal-body" class="text-sm text-slate-300 leading-relaxed"></p>
+            <button onclick="closeInfoModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold">Fermer</button>
         </div>
-
-        <!-- Bottom Footer -->
-        <div class="pt-8 flex flex-col md:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-            <div>
-                © <span id="year">2026</span> Université Côte d'Azur & Réseau National des IUT. Tous droits réservés.
-            </div>
-            <div class="flex flex-wrap items-center gap-4">
-                <a href="#modal" onclick="openModal('Politique du site', 'Ce portail d\'information respecte les standards du Web accessibilité. Les données sont mises à jour régulièrement via les API institutionnelles et ouvertes.')" class="hover:text-slate-300 transition">Politique du site</a>
-                <a href="#modal" onclick="openModal('Mentions Légales', 'Directeur de la publication : Présidence de l\'Université Côte d\'Azur. Éditeur : Service de Communication IUT Nice Côte d\'Azur. Hébergement : Serveurs Universitaires UCA.')" class="hover:text-slate-300 transition">Mentions légales</a>
-                <a href="#modal" onclick="openModal('Confidentialité & RGPD', 'Conformément au RGPD, aucune donnée personnelle n\'est collectée à votre insu. Les cookies éventuels servent uniquement à mesurer la fréquentation anonyme du site.')" class="hover:text-slate-300 transition">Confidentialité (RGPD)</a>
-                <a href="#modal" onclick="openModal('Règlement Extérieur', 'L\'utilisation des réseaux universitaires et des services informatiques est soumise à la Charte d\'usage du système d\'information de l\'Université Côte d\'Azur.')" class="hover:text-slate-300 transition">Règlement intérieur</a>
-            </div>
-        </div>
-
     </div>
-</footer>
 
-<script>
-/* Set Dynamic Year in Footer */
-document.getElementById('year').innerText = new Date().getFullYear();
+    <!-- FOOTER COMPLET -->
+    <footer class="glass-panel border-t border-slate-800 py-12">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-xs text-slate-400">
+            <div>
+                <h4 class="text-white font-bold mb-3 uppercase">Université Côte d'Azur</h4>
+                <p>Campus Fabron - 41 Boulevard Napoléon III, 06206 Nice</p>
+                <p class="mt-2">Téléphone : 04 89 15 30 00</p>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-3 uppercase">Accès Rapides</h4>
+                <p><a href="#" onclick="openInfoModal('CROUS', 'Service de restauration R.U. et logements étudiants.')" class="hover:text-uca-cyan">CROUS & Restauration</a></p>
+                <p class="mt-1"><a href="#" onclick="openInfoModal('BU', 'Bibliothèques universitaires de Nice et Sophia.')" class="hover:text-uca-cyan">Bibliothèques BU</a></p>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-3 uppercase">Mentions Légales</h4>
+                <p><a href="#" onclick="openInfoModal('Confidentialité', 'Conforme au règlement RGPD.')" class="hover:text-uca-cyan">Confidentialité & RGPD</a></p>
+                <p class="mt-1">© 2026 Université Côte d'Azur. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
 
-let scene, camera, renderer, particles, particleGeo, particleMat;
-let mouseX = 0, mouseY = 0;
+    <script>
+        // Menu Mobile Toggle
+        document.getElementById('menu-btn').onclick = () => {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        };
 
-function initThreeJS() {
-    const canvas = document.getElementById('bg-canvas');
-    scene = new THREE.Scene();
-
-    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
-    camera.position.z = 400;
-
-    renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    // Create particles
-    const particleCount = window.innerWidth < 768 ? 350 : 750;
-    particleGeo = new THREE.BufferGeometry();
-    const positions = new Float32Array(particleCount * 3);
-    const colors = new Float32Array(particleCount * 3);
-
-    const color1 = new THREE.Color('#0055A5'); // UCA Blue
-    const color2 = new THREE.Color('#00A8E8'); // Cyan
-    const color3 = new THREE.Color('#FF007F'); // Pink accent
-
-    for (let i = 0; i < particleCount * 3; i += 3) {
-        positions[i] = (Math.random() - 0.5) * 1000;
-        positions[i + 1] = (Math.random() - 0.5) * 1000;
-        positions[i + 2] = (Math.random() - 0.5) * 1000;
-
-        let mixedColor = color1.clone();
-        const rand = Math.random();
-        if (rand > 0.6) mixedColor = color2.clone();
-        else if (rand > 0.85) mixedColor = color3.clone();
-
-        colors[i] = mixedColor.r;
-        colors[i + 1] = mixedColor.g;
-        colors[i + 2] = mixedColor.b;
-    }
-
-    particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    particleGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-    particleMat = new THREE.PointsMaterial({
-        size: 3.5,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.7,
-        blending: THREE.AdditiveBlending
-    });
-
-    particles = new THREE.Points(particleGeo, particleMat);
-    scene.add(particles);
-
-    // Mouse listener
-    document.addEventListener('mousemove', (e) => {
-        mouseX = (e.clientX - window.innerWidth / 2) * 0.05;
-        mouseY = (e.clientY - window.innerHeight / 2) * 0.05;
-    });
-
-    // Resize handler
-    window.addEventListener('resize', onWindowResize);
-    
-    // Start animation loop
-    animateThree();
-}
-
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-function animateThree() {
-    requestAnimationFrame(animateThree);
-
-    // Smooth movement based on mouse & scroll
-    particles.rotation.y += 0.001;
-    particles.rotation.x += 0.0005;
-
-    camera.position.x += (mouseX - camera.position.x) * 0.03;
-    camera.position.y += (-mouseY - camera.position.y) * 0.03;
-    camera.lookAt(scene.position);
-
-    renderer.render(scene, camera);
-}
-
-const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-const mobileMenu = document.getElementById('mobile-menu');
-
-mobileMenuBtn.addEventListener('click', () => {
-    mobileMenu.classList.toggle('hidden');
-});
-
-document.querySelectorAll('.mobile-nav-link').forEach(link => {
-    link.addEventListener('click', () => {
-        mobileMenu.classList.add('hidden');
-    });
-});
-
-const fallbackArticles = [
-    {
-        id: 'nice-1',
-        category: 'nice',
-        tag: "IUT Nice Côte d'Azur",
-        badgeColor: 'bg-uca-cyan text-slate-950',
-        title: "Inauguration du nouveau FabLab connecté sur le Campus Fabron",
-        description: "L'IUT Nice Côte d'Azur renforce ses équipements de pointe pour les étudiants en B.U.T. Informatique et GEII avec des imprimantes 3D industrielles et bancs d'essai IoT.",
-        date: "24 Septembre 2026",
-        readTime: "3 min de lecture",
-        author: "Com' IUT Nice",
-        image: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80",
-        url: "#"
-    },
-    {
-        id: 'nice-2',
-        category: 'nice',
-        tag: "Sophia Antipolis",
-        badgeColor: 'bg-uca-cyan text-slate-950',
-        title: "Partenariat d'Excellence avec la Technopole de Sophia Antipolis",
-        description: "Les étudiants de l'IUT bénéficieront de plus de 150 offres de stages supplémentaires et de projets tutorés directement encadrés par des ingénieurs de grandes entreprises tech.",
-        date: "20 Septembre 2026",
-        readTime: "4 min de lecture",
-        author: "Relations Entreprises UCA",
-        image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=600&q=80",
-        url: "#"
-    },
-    {
-        id: 'france-1',
-        category: 'france',
-        tag: "Réseau IUTs France",
-        badgeColor: 'bg-pink-500 text-white',
-        title: "Réforme du B.U.T. : Bilan très positif pour l'insertion professionnelle à Bac+3",
-        description: "Le Ministère de l'Enseignement Supérieur publie le rapport annuel confirmant l'attractivité du Bachelor Universitaire de Technologie auprès des recruteurs industriels.",
-        date: "18 Septembre 2026",
-        readTime: "5 min de lecture",
-        author: "Direction Générale IUT",
-        image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=600&q=80",
-        url: "#"
-    },
-    {
-        id: 'france-2',
-        category: 'france',
-        tag: "Concours National IUT",
-        badgeColor: 'bg-pink-500 text-white',
-        title: "Challenge National de Robotique Inter-IUT : Inscriptions Ouvertes",
-        description: "Édition 2026 du grand rassemblement annuel des départements Génie Électrique et Informatique. Les équipes de toute la France s'affronteront sur le thème de l'IA embarquée.",
-        date: "15 Septembre 2026",
-        readTime: "2 min de lecture",
-        author: "Comité National IUT",
-        image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=600&q=80",
-        url: "#"
-    },
-    {
-        id: 'edu-1',
-        category: 'education',
-        tag: "Recherche & Pédagogie",
-        badgeColor: 'bg-amber-400 text-slate-950',
-        title: "L'Intelligence Artificielle au cœur de la refonte des diplômes universitaires",
-        description: "Comment l'Université Côte d'Azur intègre les modules d'éthique et de pratique de l'IA générative dans toutes ses spécialités technologiques.",
-        date: "12 Septembre 2026",
-        readTime: "6 min de lecture",
-        author: "Conseil Académique UCA",
-        image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=600&q=80",
-        url: "#"
-    }
-];
-
-let activeFilter = 'all';
-let devToArticles = [];
-
-async function fetchDevToArticles() {
-    try {
-        const response = await fetch('https://dev.to/api/articles?per_page=6&tag=webdev');
-        if (!response.ok) throw new Error('Erreur API Dev.to');
-        const data = await response.json();
-        
-        devToArticles = data.map(item => ({
-            id: 'dev-' + item.id,
-            category: 'devto',
-            tag: 'Dev.to Tech',
-            badgeColor: 'bg-emerald-400 text-slate-950',
-            title: item.title,
-            description: item.description || "Article technique issu de la communauté Dev.to concernant le développement et les technologies actuelles.",
-            date: new Date(item.published_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
-            readTime: `${item.reading_time_minutes || 3} min de lecture`,
-            author: item.user ? item.user.name : "Communauté Dev.to",
-            image: item.cover_image || item.social_image || "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=600&q=80",
-            url: item.url
-        }));
-    } catch (err) {
-        console.warn("API Dev.to fallback utilisé", err);
-        devToArticles = [];
-    }
-    
-    renderNews();
-}
-
-function setFilter(filter) {
-    activeFilter = filter;
-    
-    // Update button styles
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        if (btn.getAttribute('data-filter') === filter) {
-            btn.className = 'filter-btn active px-4 py-2 rounded-xl text-xs font-semibold bg-uca-cyan text-slate-950 shadow-md transition';
-        } else {
-            btn.className = 'filter-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700 transition';
+        // Modal Functionality
+        function openInfoModal(title, body) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-body').innerText = body;
+            document.getElementById('info-modal').classList.remove('hidden');
         }
-    });
+        function closeInfoModal() {
+            document.getElementById('info-modal').classList.add('hidden');
+        }
 
-    renderNews();
-}
-
-function renderNews() {
-    const grid = document.getElementById('news-grid');
-    grid.innerHTML = '';
-
-    let allArticles = [...fallbackArticles, ...devToArticles];
-
-    if (activeFilter !== 'all') {
-        allArticles = allArticles.filter(art => art.category === activeFilter);
-    }
-
-    if (allArticles.length === 0) {
-        grid.innerHTML = `
-            <div class="col-span-full py-12 text-center text-slate-400 glass-card rounded-2xl">
-                <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-500"></i>
-                <p>Aucune actualité disponible pour cette catégorie pour le moment.</p>
-            </div>
-        `;
-        return;
-    }
-
-    allArticles.forEach(article => {
-        const card = document.createElement('article');
-        card.className = 'glass-card rounded-2xl overflow-hidden flex flex-col h-full';
-        
-        card.innerHTML = `
-            <div class="relative h-48 overflow-hidden bg-slate-900">
-                <img src="${article.image}" alt="${article.title}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=600&q=80'">
-                <div class="absolute top-3 left-3">
-                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider shadow-md ${article.badgeColor}">
-                        ${article.tag}
-                    </span>
-                </div>
-            </div>
+        // Action lancement du Proxy Python BS4 pour le jeu
+        function openViceCityProxy() {
+            const overlay = document.getElementById('vice-overlay');
+            const iframe = document.getElementById('game-iframe');
             
-            <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
-                <div class="space-y-2">
-                    <div class="flex items-center gap-2 text-[11px] text-slate-400">
-                        <span><i class="fa-regular fa-calendar mr-1"></i>${article.date}</span>
-                        <span>•</span>
-                        <span><i class="fa-regular fa-clock mr-1"></i>${article.readTime}</span>
-                    </div>
-                    <h3 class="text-base font-bold text-white line-clamp-2 hover:text-uca-cyan transition cursor-pointer" onclick="openArticleModal('${article.id}')">
-                        ${article.title}
-                    </h3>
-                    <p class="text-xs text-slate-300 line-clamp-3 leading-relaxed">
-                        ${article.description}
-                    </p>
-                </div>
+            // Appel de la route Flask créée avec BeautifulSoup 4 !
+            iframe.src = "/game-proxy";
+            
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
 
-                <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                    <span class="text-[11px] text-slate-400 font-medium">Par ${article.author}</span>
-                    
-                    ${article.url && article.url !== '#' ? 
-                        `<a href="${article.url}" target="_blank" rel="noopener" class="text-xs font-semibold text-uca-cyan hover:underline inline-flex items-center gap-1">
-                            Lire la suite <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                         </a>` : 
-                        `<button onclick="openArticleModal('${article.id}')" class="text-xs font-semibold text-uca-cyan hover:underline inline-flex items-center gap-1">
-                            Lire l'article <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                         </button>`
-                    }
-                </div>
-            </div>
-        `;
+        function closeViceCityProxy() {
+            const overlay = document.getElementById('vice-overlay');
+            const iframe = document.getElementById('game-iframe');
+            iframe.src = "";
+            overlay.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
 
-        grid.appendChild(card);
-    });
-}
+        // Chargement des actualités Dev.to API
+        async function loadNews() {
+            const grid = document.getElementById('news-grid');
+            grid.innerHTML = '<div class="col-span-3 text-center py-8">Chargement du flux en direct...</div>';
+            
+            try {
+                const res = await fetch('https://dev.to/api/articles?per_page=6&tag=webdev');
+                const articles = await res.json();
+                
+                grid.innerHTML = '';
+                articles.forEach(art => {
+                    grid.innerHTML += `
+                        <div class="glass-card rounded-xl p-5 flex flex-col justify-between space-y-4">
+                            <div>
+                                <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">DEV.TO TECH</span>
+                                <h3 class="text-sm font-bold text-white mt-2 line-clamp-2">${art.title}</h3>
+                                <p class="text-xs text-slate-300 mt-2 line-clamp-3">${art.description || ''}</p>
+                            </div>
+                            <a href="${art.url}" target="_blank" class="text-xs font-bold text-uca-cyan hover:underline">Lire l'article complet →</a>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                grid.innerHTML = '<div class="col-span-3 text-center text-red-400">Erreur lors de la récupération des actualités.</div>';
+            }
+        }
 
-function openArticleModal(id) {
-    const allArticles = [...fallbackArticles, ...devToArticles];
-    const article = allArticles.find(a => a.id === id);
-    if (!article) return;
-
-    openModal(
-        `<span class="text-uca-cyan">[${article.tag}]</span> ${article.title}`,
-        `
-        <div class="space-y-4">
-            <img src="${article.image}" class="w-full h-56 object-cover rounded-2xl border border-slate-700" alt="">
-            <div class="flex items-center gap-3 text-xs text-slate-400">
-                <span><i class="fa-regular fa-user mr-1"></i>${article.author}</span>
-                <span>•</span>
-                <span><i class="fa-regular fa-calendar mr-1"></i>${article.date}</span>
-            </div>
-            <p class="text-slate-200 text-sm leading-relaxed">${article.description}</p>
-            <p class="text-slate-300 text-sm leading-relaxed">L'IUT Nice Côte d'Azur et le réseau des 108 IUTs de France accompagnent la transformation numérique, technologique et écologique. Les étudiants disposent de parcours personnalisés et d'un enseignement ancré dans la pratique.</p>
-            ${article.url && article.url !== '#' ? `<a href="${article.url}" target="_blank" class="inline-block mt-2 px-4 py-2 bg-uca-cyan text-slate-950 font-bold text-xs rounded-xl hover:bg-cyan-400">Consulter la source d'origine</a>` : ''}
-        </div>
-        `
-    );
-}
-
-function openViceCity() {
-    const overlay = document.getElementById('vice-city-overlay');
-    const iframe = document.getElementById('vice-city-iframe');
-    
-    // Set secret iframe src only on click
-    iframe.src = "https://web.archive.org/web/20260901085540/https://quenq.com/apps/vice-city-online/";
-    
-    overlay.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeViceCity() {
-    const overlay = document.getElementById('vice-city-overlay');
-    const iframe = document.getElementById('vice-city-iframe');
-    
-    iframe.src = ""; // Stop playing audio/video when closed
-    overlay.classList.add('hidden');
-    document.body.style.overflow = 'auto';
-}
-
-function openModal(title, bodyHtml) {
-    document.getElementById('modal-title').innerHTML = title;
-    document.getElementById('modal-body').innerHTML = bodyHtml;
-    document.getElementById('info-modal').classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeModal() {
-    document.getElementById('info-modal').classList.add('hidden');
-    document.body.style.overflow = 'auto';
-}
-
-function handleNewsletter(e) {
-    e.preventDefault();
-    openModal('Abonnement Confirmé', 'Merci pour votre inscription ! Vous recevrez régulièrement les actualités phares de l\'Université Côte d\'Azur et de l\'IUT Nice.');
-    e.target.reset();
-}
-
-window.onload = function() {
-    initThreeJS();
-    fetchDevToArticles();
-};
-</script>
-
+        window.onload = loadNews;
+    </script>
 </body>
 </html>

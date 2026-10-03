@@ -1,264 +1,947 @@
 <!DOCTYPE html>
-<html lang="fr" class="dark">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Université Côte d'Azur & Réseau IUT | Portail d'Actualités</title>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        uca: {
-                            blue: '#0055A5',
-                            cyan: '#00A8E8',
-                            dark: '#070A13',
-                            panel: '#0F172A',
-                            accent: '#FF007F'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Planning Carrefour — Assistant d'heures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<style>
+:root{
+  --bg:#141518;
+  --bg-soft:#1b1d22;
+  --bg-card:#1e2026;
+  --line:#2c2f37;
+  --line-soft:#262931;
+  --text:#f2f2ec;
+  --text-dim:#9a9da6;
+  --text-faint:#63666f;
+  --accent:#4f8ff7;
+  --accent-soft:rgba(79,143,247,.14);
+  --ok:#3ecf8e;
+  --ok-soft:rgba(62,207,142,.13);
+  --warn:#f5a524;
+  --warn-soft:rgba(245,165,36,.13);
+  --danger:#f2564b;
+  --danger-soft:rgba(242,86,75,.13);
+  --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  --sans:'Inter',-apple-system,'Segoe UI',sans-serif;
+  --radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--text);font-family:var(--sans);
+  font-size:15px;line-height:1.5;min-height:100vh;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+::selection{background:var(--accent);color:#fff}
 
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #070a13;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(0, 85, 165, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(0, 168, 232, 0.15) 0px, transparent 50%);
-            background-attachment: fixed;
-            color: #f1f5f9;
-        }
+/* ---------- Header ---------- */
+header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(20,21,24,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line-soft);
+}
+.header-inner{
+  max-width:1080px;margin:0 auto;padding:14px 20px;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.logo{
+  display:flex;align-items:center;gap:11px;font-weight:800;font-size:17px;letter-spacing:-.02em;
+}
+.logo-mark{
+  width:34px;height:34px;border-radius:9px;flex-shrink:0;
+  background:linear-gradient(135deg,#1256b8,#004e9f);
+  display:grid;place-items:center;
+}
+.logo-mark svg{width:19px;height:19px}
+.logo small{display:block;font-size:11px;font-weight:500;color:var(--text-dim);letter-spacing:.02em}
+.header-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+.week-badge{
+  font-family:var(--mono);font-size:12px;color:var(--accent);
+  background:var(--accent-soft);border:1px solid rgba(79,143,247,.25);
+  padding:5px 11px;border-radius:999px;font-weight:500;white-space:nowrap;
+}
 
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
+/* ---------- Layout ---------- */
+main{max-width:1080px;margin:0 auto;padding:26px 20px 90px}
+section{margin-bottom:34px}
+.sec-title{
+  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;
+  color:var(--text-faint);margin-bottom:14px;display:flex;align-items:center;gap:10px;
+}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--line-soft)}
 
-        .glass-card {
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.3s ease;
-        }
+/* ---------- Buttons ---------- */
+.btn{
+  appearance:none;border:1px solid var(--line);background:var(--bg-card);color:var(--text);
+  font-family:var(--sans);font-size:13.5px;font-weight:600;
+  padding:10px 16px;border-radius:10px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;min-height:44px;
+  transition:border-color .15s,background .15s,transform .1s;
+}
+.btn:hover{border-color:var(--text-faint)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:#3f7fe8}
+.btn.danger-ghost{color:var(--danger)}
+.btn.danger-ghost:hover{border-color:var(--danger);background:var(--danger-soft)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--text-dim)}
+.btn.ghost:hover{color:var(--text);background:var(--bg-soft)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn svg{width:16px;height:16px;flex-shrink:0}
 
-        .glass-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(0, 168, 232, 0.4);
-            box-shadow: 0 12px 30px -10px rgba(0, 168, 232, 0.25);
-        }
-    </style>
+/* ---------- Upload ---------- */
+.dropzone{
+  border:1.5px dashed var(--line);border-radius:var(--radius);
+  background:var(--bg-soft);padding:38px 24px;text-align:center;cursor:pointer;
+  transition:border-color .2s,background .2s;
+}
+.dropzone:hover,.dropzone.drag{border-color:var(--accent);background:var(--accent-soft)}
+.dropzone .dz-icon{
+  width:52px;height:52px;margin:0 auto 14px;border-radius:14px;
+  background:var(--accent-soft);display:grid;place-items:center;color:var(--accent);
+}
+.dropzone .dz-icon svg{width:26px;height:26px}
+.dropzone p{font-weight:600;font-size:15px}
+.dropzone span{display:block;margin-top:5px;font-size:13px;color:var(--text-dim)}
+.dropzone kbd{
+  font-family:var(--mono);font-size:11px;background:var(--bg-card);
+  border:1px solid var(--line);border-radius:5px;padding:2px 6px;
+}
+#fileInput{display:none}
+
+.ocr-progress{margin-top:16px;display:none}
+.ocr-progress.on{display:block}
+.ocr-bar{height:6px;background:var(--bg-card);border-radius:99px;overflow:hidden}
+.ocr-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .25s}
+.ocr-label{margin-top:8px;font-size:12.5px;color:var(--text-dim);font-family:var(--mono)}
+
+.scan-preview{margin-top:18px;display:none;gap:16px;align-items:flex-start}
+.scan-preview.on{display:flex}
+.scan-preview img{
+  width:120px;max-height:160px;object-fit:cover;border-radius:10px;
+  border:1px solid var(--line);
+}
+.scan-preview .raw{
+  flex:1;min-width:0;font-family:var(--mono);font-size:11.5px;color:var(--text-dim);
+  background:var(--bg-soft);border:1px solid var(--line-soft);border-radius:10px;
+  padding:12px 14px;max-height:160px;overflow:auto;white-space:pre-wrap;word-break:break-word;
+}
+
+/* ---------- Meta ---------- */
+.meta-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;
+}
+.field label{
+  display:block;font-size:11.5px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--text-faint);margin-bottom:6px;
+}
+.field input,.field select{
+  width:100%;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;
+  color:var(--text);font-family:var(--sans);font-size:14px;font-weight:500;
+  padding:11px 13px;min-height:44px;outline:none;transition:border-color .15s;
+}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+
+/* ---------- Status banner ---------- */
+.status-banner{
+  border-radius:var(--radius);padding:18px 20px;display:none;
+  align-items:center;gap:16px;border:1px solid;
+}
+.status-banner.on{display:flex}
+.status-banner.ok{background:var(--ok-soft);border-color:rgba(62,207,142,.35)}
+.status-banner.danger{background:var(--danger-soft);border-color:rgba(242,86,75,.4)}
+.status-banner .s-icon{
+  width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;
+}
+.status-banner.ok .s-icon{background:rgba(62,207,142,.18);color:var(--ok)}
+.status-banner.danger .s-icon{background:rgba(242,86,75,.18);color:var(--danger)}
+.status-banner .s-icon svg{width:22px;height:22px}
+.status-banner h3{font-size:16px;font-weight:700;letter-spacing:-.01em}
+.status-banner.ok h3{color:var(--ok)}
+.status-banner.danger h3{color:var(--danger)}
+.status-banner p{font-size:13px;color:var(--text-dim);margin-top:2px}
+.status-banner p b{color:var(--text);font-family:var(--mono)}
+
+/* ---------- Table ---------- */
+.table-wrap{
+  background:var(--bg-card);border:1px solid var(--line-soft);border-radius:var(--radius);
+  overflow:hidden;
+}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:640px}
+thead th{
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;
+  color:var(--text-faint);text-align:left;padding:12px 14px;
+  border-bottom:1px solid var(--line);white-space:nowrap;
+  background:var(--bg-soft);
+}
+tbody td{padding:8px 10px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr.repos{background:rgba(255,255,255,.015)}
+tbody tr.repos td{color:var(--text-faint)}
+td .day-name{font-weight:600;font-size:14px}
+td .day-date{font-family:var(--mono);font-size:11.5px;color:var(--text-faint)}
+.cell-input{
+  background:transparent;border:1px solid transparent;border-radius:8px;color:var(--text);
+  font-family:var(--mono);font-size:13.5px;font-weight:500;padding:7px 9px;width:78px;
+  outline:none;transition:border-color .15s,background .15s;min-height:40px;
+}
+.cell-input:hover{border-color:var(--line)}
+.cell-input:focus{border-color:var(--accent);background:var(--bg-soft)}
+.cell-input.pause{width:56px}
+.cell-input.poste{width:96px;font-family:var(--sans);font-weight:600;text-transform:uppercase;font-size:12.5px}
+.hours-cell{font-family:var(--mono);font-weight:700;font-size:14px;white-space:nowrap}
+.tag{
+  display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.06em;
+  padding:3px 9px;border-radius:999px;text-transform:uppercase;
+}
+.tag.repos{background:var(--bg-soft);color:var(--text-faint);border:1px solid var(--line)}
+.tag.work{background:var(--accent-soft);color:var(--accent);border:1px solid rgba(79,143,247,.3)}
+.row-del{
+  background:none;border:none;color:var(--text-faint);cursor:pointer;padding:10px;
+  border-radius:8px;min-width:44px;min-height:44px;
+}
+.row-del:hover{color:var(--danger);background:var(--danger-soft)}
+.row-del svg{width:15px;height:15px;display:block;margin:auto}
+.table-foot{padding:12px 14px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap}
+
+/* ---------- Stats ---------- */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{
+  background:var(--bg-card);border:1px solid var(--line-soft);border-radius:var(--radius);
+  padding:16px 18px;
+}
+.stat .s-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-faint)}
+.stat .s-value{font-family:var(--mono);font-size:26px;font-weight:700;margin-top:6px;letter-spacing:-.02em}
+.stat .s-value small{font-size:13px;color:var(--text-dim);font-weight:500}
+.stat .s-sub{font-size:12px;color:var(--text-dim);margin-top:3px}
+.stat.hl-ok .s-value{color:var(--ok)}
+.stat.hl-danger .s-value{color:var(--danger)}
+
+.threshold-track{
+  margin-top:16px;background:var(--bg-card);border:1px solid var(--line-soft);
+  border-radius:var(--radius);padding:18px 20px;
+}
+.threshold-track .t-head{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--text-dim);margin-bottom:10px;flex-wrap:wrap;gap:6px}
+.threshold-track .t-head b{font-family:var(--mono);color:var(--text);font-size:14px}
+.t-bar{height:10px;background:var(--bg-soft);border-radius:99px;overflow:hidden;position:relative}
+.t-fill{height:100%;border-radius:99px;background:var(--ok);transition:width .5s cubic-bezier(.22,1,.36,1)}
+.t-fill.warn{background:var(--warn)}
+.t-fill.over{background:var(--danger)}
+
+/* ---------- Day bars ---------- */
+.daybars{display:flex;flex-direction:column;gap:8px}
+.daybar{display:grid;grid-template-columns:92px 1fr 74px;align-items:center;gap:12px;padding:6px 0}
+.daybar .db-day{font-size:13px;font-weight:600;color:var(--text-dim);white-space:nowrap}
+.daybar .db-day .db-d{font-family:var(--mono);font-size:11px;color:var(--text-faint);margin-left:6px}
+.db-track{height:22px;background:var(--bg-soft);border-radius:7px;overflow:hidden}
+.db-fill{height:100%;border-radius:7px;background:var(--accent);opacity:.85;transition:width .5s cubic-bezier(.22,1,.36,1)}
+.daybar.repos .db-fill{background:var(--line)}
+.db-hours{font-family:var(--mono);font-size:12.5px;font-weight:600;text-align:right;color:var(--text-dim)}
+.daybar:not(.repos) .db-hours{color:var(--text)}
+
+/* ---------- History ---------- */
+.hist-list{display:flex;flex-direction:column;gap:10px}
+.hist-item{
+  background:var(--bg-card);border:1px solid var(--line-soft);border-radius:var(--radius);
+  padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  transition:border-color .15s;
+}
+.hist-item:hover{border-color:var(--text-faint)}
+.hist-item.current{border-color:var(--accent)}
+.hist-item .h-title{font-weight:700;font-size:14.5px}
+.hist-item .h-meta{font-family:var(--mono);font-size:12px;color:var(--text-dim);margin-top:2px}
+.hist-item .h-hours{
+  font-family:var(--mono);font-weight:700;font-size:16px;margin-left:auto;white-space:nowrap;
+}
+.hist-item .h-hours.ok{color:var(--ok)}
+.hist-item .h-hours.over{color:var(--danger)}
+.hist-item .h-actions{display:flex;gap:6px}
+.empty-state{
+  text-align:center;padding:34px 20px;color:var(--text-faint);font-size:13.5px;
+  border:1px dashed var(--line);border-radius:var(--radius);
+}
+
+/* ---------- Toast ---------- */
+#toast{
+  position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--bg-card);border:1px solid var(--line);color:var(--text);
+  padding:12px 20px;border-radius:12px;font-size:13.5px;font-weight:600;
+  opacity:0;transition:all .3s cubic-bezier(.22,1,.36,1);z-index:100;pointer-events:none;
+  box-shadow:0 12px 40px rgba(0,0,0,.5);max-width:90vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---------- Footer note ---------- */
+.foot-note{
+  text-align:center;font-size:12px;color:var(--text-faint);margin-top:50px;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.foot-note svg{width:13px;height:13px;color:var(--ok)}
+
+@media (max-width:640px){
+  main{padding:20px 14px 80px}
+  .header-inner{padding:12px 14px}
+  .logo{font-size:15px}
+  .scan-preview{flex-direction:column}
+  .scan-preview img{width:100%;max-height:220px}
+  .daybar{grid-template-columns:78px 1fr 64px;gap:8px}
+  .stat .s-value{font-size:22px}
+  .status-banner{flex-direction:row;padding:15px}
+}
+@media print{
+  body{background:#fff;color:#000}
+  header,.dropzone,.ocr-progress,.table-foot,#toast,.foot-note,.hist-item .h-actions,.row-del{display:none!important}
+  .table-wrap,.stat,.threshold-track,.hist-item{border-color:#ccc;background:#fff}
+  td,th{color:#000}
+}
+</style>
 </head>
-<body class="min-h-screen antialiased flex flex-col justify-between">
+<body>
 
-    <!-- HEADER RESPONSIVE -->
-    <header class="fixed top-0 left-0 right-0 z-40 glass-panel border-b border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20">
-                
-                <div class="flex items-center gap-3">
-                    <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-uca-blue to-uca-cyan flex items-center justify-center shadow-lg">
-                        <i class="fa-solid fa-graduation-cap text-xl text-white"></i>
-                    </div>
-                    <div>
-                        <span class="text-xs uppercase tracking-widest font-semibold text-uca-cyan block">Université Côte d'Azur</span>
-                        <h1 class="text-lg font-bold text-white">Portail IUT & Actualités</h1>
-                    </div>
-                </div>
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 9h18M9 14l2 2 4-4"/></svg>
+      </div>
+      <div>Mon Planning<small>Carrefour · Assistant d'heures</small></div>
+    </div>
+    <div class="header-actions">
+      <span class="week-badge" id="weekBadge">Aucune semaine</span>
+      <button class="btn ghost" id="btnPrint" title="Imprimer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
 
-                <!-- Navigation Desktop -->
-                <nav class="hidden md:flex items-center space-x-2">
-                    <a href="#news-section" class="px-3 py-2 rounded-lg text-sm font-medium hover:text-uca-cyan transition">Actualités</a>
-                    <a href="#" onclick="openInfoModal('Formations', 'Découvrez les B.U.T. (Bachelors Universitaires de Technologie) dispensés à Nice, Sophia-Antipolis, Cannes et Menton.')" class="px-3 py-2 rounded-lg text-sm font-medium hover:text-uca-cyan transition">Formations</a>
-                    <a href="#" onclick="openInfoModal('IUT Nice', 'L\'IUT Nice Côte d’Azur accueille plus de 2 500 étudiants répartis sur 4 sites avec des équipements technologiques d\'excellence.')" class="px-3 py-2 rounded-lg text-sm font-medium hover:text-uca-cyan transition">IUT Nice</a>
-                    <a href="#" onclick="openInfoModal('Réseau IUTs', 'Le réseau national regroupe 108 IUTs partout en France pour un enseignement ancré dans l\'industrie.')" class="px-3 py-2 rounded-lg text-sm font-medium hover:text-uca-cyan transition">Réseau IUTs</a>
-                </nav>
+<main>
 
-                <!-- Hamburger Mobile -->
-                <button id="menu-btn" class="md:hidden p-2 text-slate-300 hover:text-white">
-                    <i class="fa-solid fa-bars text-2xl"></i>
-                </button>
-            </div>
-        </div>
+  <!-- 1. IMPORT -->
+  <section>
+    <div class="sec-title">1 · Importer ma semaine</div>
+    <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Importer une photo du planning">
+      <div class="dz-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </div>
+      <p>Photographiez ou glissez votre planning ici</p>
+      <span>Lecture automatique (OCR) · ou <kbd>coller</kbd> une image · JPG / PNG</span>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" capture="environment">
+    <div class="ocr-progress" id="ocrProgress">
+      <div class="ocr-bar"><div class="ocr-fill" id="ocrFill"></div></div>
+      <div class="ocr-label" id="ocrLabel">Analyse en cours…</div>
+    </div>
+    <div class="scan-preview" id="scanPreview">
+      <img id="previewImg" alt="Aperçu du planning scanné">
+      <div class="raw" id="rawText"></div>
+    </div>
+  </section>
 
-        <!-- Menu Mobile Dropdown -->
-        <div id="mobile-menu" class="hidden md:hidden glass-panel px-4 py-4 space-y-2 border-t border-slate-800">
-            <a href="#news-section" class="block px-3 py-2 rounded-md hover:bg-slate-800">Actualités Direct</a>
-            <a href="#" onclick="openInfoModal('Formations', 'Catalogue complet des diplômes B.U.T.')" class="block px-3 py-2 rounded-md hover:bg-slate-800">Formations</a>
-            <a href="#" onclick="openInfoModal('IUT Nice', 'Coordonnées et détails des Campus Fabron & Sophia.')" class="block px-3 py-2 rounded-md hover:bg-slate-800">IUT Nice Côte d'Azur</a>
-        </div>
-    </header>
-
-    <main class="pt-28 pb-16 flex-1">
-        
-        <!-- HERO SECTION -->
-        <section class="max-w-7xl mx-auto px-4 text-center py-12">
-            <h1 class="text-4xl sm:text-6xl font-extrabold text-white mb-6">
-                L'Excellence Académique sur la <span class="bg-clip-text text-transparent bg-gradient-to-r from-uca-cyan to-pink-500">Côte d'Azur</span>
-            </h1>
-            <p class="text-slate-300 max-w-2xl mx-auto text-base sm:text-lg mb-8">
-                Consultez en direct les flux d'informations officielles de l'IUT Nice, du réseau national des IUTs et la veille technologique Dev.to.
-            </p>
-        </section>
-
-        <!-- FLUX ACTUALITÉS -->
-        <section id="news-section" class="max-w-7xl mx-auto px-4 py-8">
-            <div class="glass-panel p-4 rounded-2xl mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-rss text-uca-cyan"></i> Actualités Universitaires & Tech
-                </h2>
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="filterNews('all')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-uca-cyan text-slate-950">Tous</button>
-                    <button onclick="filterNews('nice')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white">IUT Nice</button>
-                    <button onclick="filterNews('devto')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white">Dev.to API</button>
-                </div>
-            </div>
-
-            <div id="news-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Articles générés par JS -->
-            </div>
-        </section>
-
-        <!-- SECTION INTERMÉDIAIRE : SURPRISE DE PAUSE -->
-        <section class="max-w-7xl mx-auto px-4 my-16">
-            <div class="rounded-3xl p-8 sm:p-12 glass-panel border border-pink-500/30 bg-gradient-to-r from-slate-900 via-purple-950/40 to-slate-900 flex flex-col md:flex-row items-center justify-between gap-8">
-                <div class="space-y-3 max-w-xl text-center md:text-left">
-                    <span class="px-3 py-1 rounded-full bg-pink-500/20 text-pink-300 text-xs font-bold uppercase">Zone de Décompression</span>
-                    <h3 class="text-2xl sm:text-3xl font-extrabold text-white">Besoin d'une Pause après les Révisions ?</h3>
-                    <p class="text-sm text-slate-300">Profitez d'un espace rétro interactif directement nettoyé et propulsé en temps réel par le serveur Python (BS4).</p>
-                </div>
-                <button onclick="openViceCityProxy()" class="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-2xl shadow-xl hover:scale-105 transition">
-                    <i class="fa-solid fa-gamepad mr-2"></i> Lancer la Pause Étudiante
-                </button>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- OVERLAY VICE CITY (PROPRIÉTÉ DU SERVEUR PYTHON BS4) -->
-    <div id="vice-overlay" class="fixed inset-0 z-50 hidden bg-slate-950/90 backdrop-blur-xl p-4 flex flex-col">
-        <div class="flex items-center justify-between p-4 glass-panel rounded-xl mb-4">
-            <div class="flex items-center gap-3">
-                <i class="fa-solid fa-shield-halved text-pink-500 text-2xl"></i>
-                <div>
-                    <h3 class="text-sm font-bold text-white uppercase">Espace Détente • Python BS4 Proxy Relay</h3>
-                    <p class="text-xs text-slate-400">Contournement CORS & X-Frame-Options Actif</p>
-                </div>
-            </div>
-            <button onclick="closeViceCityProxy()" class="px-4 py-2 bg-pink-600 text-white font-bold rounded-xl text-xs">
-                Fermer & Revenir
-            </button>
-        </div>
-        
-        <div class="flex-1 rounded-2xl overflow-hidden bg-black border border-slate-700 relative">
-            <iframe id="game-iframe" class="w-full h-full border-0" src="" allowfullscreen></iframe>
-        </div>
+  <!-- 2. SEMAINE -->
+  <section>
+    <div class="sec-title">2 · Ma semaine</div>
+    <div class="meta-grid" style="margin-bottom:14px">
+      <div class="field">
+        <label>Nom de la semaine</label>
+        <input type="text" id="weekLabel" placeholder="Ex : Semaine 40 de 2026">
+      </div>
+      <div class="field">
+        <label>Période</label>
+        <input type="text" id="weekRange" placeholder="Ex : Du 28/09/2026 au 04/10/2026">
+      </div>
+      <div class="field">
+        <label>Seuil d'alerte hebdo (heures)</label>
+        <input type="number" id="thresholdInput" min="1" max="60" step="0.5" value="15">
+      </div>
     </div>
 
-    <!-- MODAL INFO -->
-    <div id="info-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="glass-panel w-full max-w-lg rounded-2xl p-6 space-y-4">
-            <h3 id="modal-title" class="text-xl font-bold text-white"></h3>
-            <p id="modal-body" class="text-sm text-slate-300 leading-relaxed"></p>
-            <button onclick="closeInfoModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold">Fermer</button>
-        </div>
+    <div class="status-banner" id="statusBanner">
+      <div class="s-icon" id="statusIcon"></div>
+      <div>
+        <h3 id="statusTitle"></h3>
+        <p id="statusDetail"></p>
+      </div>
     </div>
 
-    <!-- FOOTER COMPLET -->
-    <footer class="glass-panel border-t border-slate-800 py-12">
-        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-xs text-slate-400">
-            <div>
-                <h4 class="text-white font-bold mb-3 uppercase">Université Côte d'Azur</h4>
-                <p>Campus Fabron - 41 Boulevard Napoléon III, 06206 Nice</p>
-                <p class="mt-2">Téléphone : 04 89 15 30 00</p>
-            </div>
-            <div>
-                <h4 class="text-white font-bold mb-3 uppercase">Accès Rapides</h4>
-                <p><a href="#" onclick="openInfoModal('CROUS', 'Service de restauration R.U. et logements étudiants.')" class="hover:text-uca-cyan">CROUS & Restauration</a></p>
-                <p class="mt-1"><a href="#" onclick="openInfoModal('BU', 'Bibliothèques universitaires de Nice et Sophia.')" class="hover:text-uca-cyan">Bibliothèques BU</a></p>
-            </div>
-            <div>
-                <h4 class="text-white font-bold mb-3 uppercase">Mentions Légales</h4>
-                <p><a href="#" onclick="openInfoModal('Confidentialité', 'Conforme au règlement RGPD.')" class="hover:text-uca-cyan">Confidentialité & RGPD</a></p>
-                <p class="mt-1">© 2026 Université Côte d'Azur. Tous droits réservés.</p>
-            </div>
-        </div>
-    </footer>
+    <div class="table-wrap" style="margin-top:14px">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Jour</th><th>Début</th><th>Fin</th><th>Pause (min)</th><th>Poste</th><th>Heures</th><th>Statut</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="weekBody"></tbody>
+        </table>
+      </div>
+      <div class="table-foot">
+        <button class="btn" id="btnAddRow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Ajouter une ligne
+        </button>
+        <button class="btn" id="btnExportCsv">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Export CSV
+        </button>
+        <button class="btn danger-ghost" id="btnClear" style="margin-left:auto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          Tout effacer
+        </button>
+      </div>
+    </div>
+  </section>
 
-    <script>
-        // Menu Mobile Toggle
-        document.getElementById('menu-btn').onclick = () => {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
-        };
+  <!-- 3. COMPTEURS -->
+  <section>
+    <div class="sec-title">3 · Comptage des heures</div>
+    <div class="stats-grid">
+      <div class="stat" id="statTotal">
+        <div class="s-label">Total semaine</div>
+        <div class="s-value" id="statTotalVal">0<small>h00</small></div>
+        <div class="s-sub" id="statTotalSub"></div>
+      </div>
+      <div class="stat">
+        <div class="s-label">Jours travaillés</div>
+        <div class="s-value" id="statDays">0</div>
+        <div class="s-sub" id="statDaysSub"></div>
+      </div>
+      <div class="stat">
+        <div class="s-label">Moyenne / jour travaillé</div>
+        <div class="s-value" id="statAvg">0<small>h00</small></div>
+        <div class="s-sub">sur les jours de shift</div>
+      </div>
+      <div class="stat">
+        <div class="s-label">Plus long shift</div>
+        <div class="s-value" id="statMax">0<small>h00</small></div>
+        <div class="s-sub" id="statMaxSub"></div>
+      </div>
+    </div>
 
-        // Modal Functionality
-        function openInfoModal(title, body) {
-            document.getElementById('modal-title').innerText = title;
-            document.getElementById('modal-body').innerText = body;
-            document.getElementById('info-modal').classList.remove('hidden');
+    <div class="threshold-track">
+      <div class="t-head">
+        <span>Progression vers le seuil hebdomadaire</span>
+        <b id="thresholdLabel">0h00 / 15h00</b>
+      </div>
+      <div class="t-bar"><div class="t-fill" id="thresholdFill" style="width:0%"></div></div>
+    </div>
+
+    <div style="height:14px"></div>
+    <div class="table-wrap" style="padding:16px 18px">
+      <div class="daybars" id="dayBars"></div>
+    </div>
+  </section>
+
+  <!-- 4. HISTORIQUE -->
+  <section>
+    <div class="sec-title">4 · Historique (sauvegarde locale automatique)</div>
+    <div class="hist-list" id="histList"></div>
+  </section>
+
+  <div class="foot-note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+    Vos données restent dans ce navigateur, même après fermeture. Rien n'est envoyé sur internet (hors moteur OCR).
+  </div>
+
+</main>
+
+<div id="toast"></div>
+<script>
+'use strict';
+/* =========================================================
+   Mon Planning — Carrefour
+   OCR (Tesseract.js) + parsing + comptage + localStorage
+   ========================================================= */
+
+const LS_KEY   = 'carrefour_planner_v1';
+const DAY_LETTERS = ['L','M','M','J','V','S','D'];
+const DAY_NAMES   = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+
+/* ---------- State ---------- */
+let state = loadState();
+
+function defaultState(){
+  return {
+    threshold: 15,
+    currentId: null,
+    weeks: [] // {id, label, range, createdAt, rows:[{day,dateNum,start,end,pause,poste,repos}]}
+  };
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return defaultState();
+    const s = JSON.parse(raw);
+    return Object.assign(defaultState(), s);
+  }catch(e){ return defaultState(); }
+}
+function saveState(){
+  localStorage.setItem(LS_KEY, JSON.stringify(state));
+}
+function newWeek(label, range){
+  return {
+    id: 'w' + Date.now() + Math.random().toString(36).slice(2,7),
+    label: label || '',
+    range: range || '',
+    createdAt: Date.now(),
+    rows: DAY_LETTERS.map((l,i)=>({day:l, dayIndex:i, dateNum:'', start:'', end:'', pause:0, poste:'', repos:false}))
+  };
+}
+function currentWeek(){
+  return state.weeks.find(w=>w.id===state.currentId) || null;
+}
+function ensureWeek(){
+  let w = currentWeek();
+  if(!w){
+    w = newWeek('', '');
+    state.weeks.unshift(w);
+    state.currentId = w.id;
+    saveState();
+  }
+  return w;
+}
+
+/* ---------- Helpers temps ---------- */
+function toMin(t){
+  if(!t) return null;
+  const m = String(t).trim().match(/^(\d{1,2})[:hH.](\d{2})$/);
+  if(!m) return null;
+  const h = +m[1], mi = +m[2];
+  if(h>29 || mi>59) return null;
+  return h*60+mi;
+}
+function fmtMin(min){
+  if(min==null || isNaN(min)) return '0h00';
+  const neg = min<0; min=Math.abs(min);
+  const h=Math.floor(min/60), m=Math.round(min%60);
+  return (neg?'-':'')+h+'h'+String(m).padStart(2,'0');
+}
+function fmtMinParts(min){
+  if(min==null||isNaN(min)) return {h:'0', m:'00'};
+  const h=Math.floor(min/60), m=Math.round(min%60);
+  return {h:String(h), m:String(m).padStart(2,'0')};
+}
+function rowMinutes(r){
+  if(r.repos) return 0;
+  const s=toMin(r.start), e=toMin(r.end);
+  if(s==null||e==null) return 0;
+  let d=e-s; if(d<0) d+=1440;            // shift de nuit
+  d-= (+r.pause||0);
+  return Math.max(0,d);
+}
+function weekMinutes(w){
+  return w.rows.reduce((a,r)=>a+rowMinutes(r),0);
+}
+function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ---------- Toast ---------- */
+let toastTimer=null;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+/* =========================================================
+   OCR + PARSING
+   ========================================================= */
+const dropzone   = document.getElementById('dropzone');
+const fileInput  = document.getElementById('fileInput');
+const ocrProgress= document.getElementById('ocrProgress');
+const ocrFill    = document.getElementById('ocrFill');
+const ocrLabel   = document.getElementById('ocrLabel');
+
+dropzone.addEventListener('click', ()=>fileInput.click());
+dropzone.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' ') fileInput.click(); });
+fileInput.addEventListener('change', e=>{ if(e.target.files[0]) handleImage(e.target.files[0]); fileInput.value=''; });
+
+['dragover','dragenter'].forEach(ev=>dropzone.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>dropzone.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.remove('drag');}));
+dropzone.addEventListener('drop', e=>{
+  const f=e.dataTransfer.files && e.dataTransfer.files[0];
+  if(f && f.type.startsWith('image/')) handleImage(f);
+});
+// Coller une image (Ctrl+V)
+window.addEventListener('paste', e=>{
+  const items=(e.clipboardData||{}).items||[];
+  for(const it of items){
+    if(it.type && it.type.startsWith('image/')){ handleImage(it.getAsFile()); break; }
+  }
+});
+
+/* Pré-traitement : niveaux de gris + contraste + upscale */
+function preprocess(file){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const scale=Math.min(2.2, 2200/img.width) || 1;
+      const c=document.createElement('canvas');
+      c.width=Math.round(img.width*scale); c.height=Math.round(img.height*scale);
+      const ctx=c.getContext('2d');
+      ctx.drawImage(img,0,0,c.width,c.height);
+      const d=ctx.getImageData(0,0,c.width,c.height), p=d.data;
+      for(let i=0;i<p.length;i+=4){
+        let g=0.299*p[i]+0.587*p[i+1]+0.114*p[i+2];
+        g=((g-128)*1.35)+128;                 // contraste
+        g=g<0?0:g>255?255:g;
+        p[i]=p[i+1]=p[i+2]=g;
+      }
+      ctx.putImageData(d,0,0);
+      c.toBlob(b=>resolve(b),'image/png');
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror=reject;
+    img.src=URL.createObjectURL(file);
+  });
+}
+
+async function handleImage(file){
+  ocrProgress.classList.add('on');
+  ocrFill.style.width='0%';
+  ocrLabel.textContent='Préparation de l\'image…';
+  document.getElementById('previewImg').src=URL.createObjectURL(file);
+
+  let text='';
+  try{
+    const blob=await preprocess(file);
+    const res=await Tesseract.recognize(blob,'fra',{
+      logger:m=>{
+        if(m.status==='recognizing text'){
+          ocrFill.style.width=Math.round(m.progress*100)+'%';
+          ocrLabel.textContent='Lecture du planning… '+Math.round(m.progress*100)+'%';
+        }else{
+          ocrLabel.textContent=m.status+'…';
         }
-        function closeInfoModal() {
-            document.getElementById('info-modal').classList.add('hidden');
-        }
+      }
+    });
+    text=res.data.text||'';
+  }catch(err){
+    console.error(err);
+    ocrLabel.textContent='';
+    ocrProgress.classList.remove('on');
+    toast('OCR indisponible (hors ligne ?) — saisie manuelle possible ci-dessous.');
+    ensureWeek(); renderAll();
+    return;
+  }
+  ocrLabel.textContent='Analyse terminée ✓';
+  setTimeout(()=>ocrProgress.classList.remove('on'),1200);
 
-        // Action lancement du Proxy Python BS4 pour le jeu
-        function openViceCityProxy() {
-            const overlay = document.getElementById('vice-overlay');
-            const iframe = document.getElementById('game-iframe');
-            
-            // Appel de la route Flask créée avec BeautifulSoup 4 !
-            iframe.src = "/game-proxy";
-            
-            overlay.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        }
+  document.getElementById('scanPreview').classList.add('on');
+  document.getElementById('rawText').textContent='Texte lu par l\'OCR :\n\n'+text.trim();
 
-        function closeViceCityProxy() {
-            const overlay = document.getElementById('vice-overlay');
-            const iframe = document.getElementById('game-iframe');
-            iframe.src = "";
-            overlay.classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }
+  applyParsed(parseSchedule(text));
+}
 
-        // Chargement des actualités Dev.to API
-        async function loadNews() {
-            const grid = document.getElementById('news-grid');
-            grid.innerHTML = '<div class="col-span-3 text-center py-8">Chargement du flux en direct...</div>';
-            
-            try {
-                const res = await fetch('https://dev.to/api/articles?per_page=6&tag=webdev');
-                const articles = await res.json();
-                
-                grid.innerHTML = '';
-                articles.forEach(art => {
-                    grid.innerHTML += `
-                        <div class="glass-card rounded-xl p-5 flex flex-col justify-between space-y-4">
-                            <div>
-                                <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">DEV.TO TECH</span>
-                                <h3 class="text-sm font-bold text-white mt-2 line-clamp-2">${art.title}</h3>
-                                <p class="text-xs text-slate-300 mt-2 line-clamp-3">${art.description || ''}</p>
-                            </div>
-                            <a href="${art.url}" target="_blank" class="text-xs font-bold text-uca-cyan hover:underline">Lire l'article complet →</a>
-                        </div>
-                    `;
-                });
-            } catch (err) {
-                grid.innerHTML = '<div class="col-span-3 text-center text-red-400">Erreur lors de la récupération des actualités.</div>';
-            }
-        }
+/* ---------- Parsing du texte OCR ---------- */
+function normalizeLine(l){
+  return l.replace(/[|]/g,' ').replace(/\s+/g,' ').trim();
+}
 
-        window.onload = loadNews;
-    </script>
+function parseSchedule(text){
+  const lines=text.split(/\n/).map(normalizeLine).filter(Boolean);
+
+  // Titre : "Semaine 40 de 2026"
+  let label='', range='';
+  const mWeek=text.match(/semaine\s+(\d{1,2})\s+de\s+(\d{4})/i);
+  if(mWeek) label='Semaine '+mWeek[1]+' de '+mWeek[2];
+  const mRange=text.match(/du\s+(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})\s+au\s+(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})/i);
+  if(mRange) range='Du '+mRange[1]+' au '+mRange[2];
+
+  // Dates de la période pour déduire les numéros de jour
+  let startDate=null;
+  if(mRange){
+    const p=mRange[1].split(/[\/\-.]/).map(Number);
+    if(p[2]<100) p[2]+=2000;
+    startDate=new Date(p[2],p[1]-1,p[0]);
+  }
+
+  const rows=[];
+  const dayRe=/^([LMJVSDmjvsd])\s*[,.\-]?\s*(\d{1,2})\b\s*(.*)$/;
+  const timeRe=/(\d{1,2})\s*[:hH\.]\s*(\d{2})\s*[-–—aàA]\s*(\d{1,2})\s*[:hH\.]\s*(\d{2})/;
+
+  for(const line of lines){
+    const m=line.match(dayRe);
+    if(!m) continue;
+    let letter=m[1].toUpperCase();
+    const dateNum=m[2];
+    let rest=m[3]||'';
+
+    // écarter les lignes parasites (ex. "Du 28/09...au...")
+    if(/^du\b/i.test(line)) continue;
+
+    const row={day:letter, dayIndex:rows.length, dateNum, start:'', end:'', pause:0, poste:'', repos:false};
+
+    if(/repos/i.test(rest)){
+      row.repos=true;
+    }else{
+      const t=rest.match(timeRe);
+      if(t){
+        row.start=String(+t[1]).padStart(2,'0')+':'+t[2];
+        row.end  =String(+t[3]).padStart(2,'0')+':'+t[4];
+        row.poste=rest.slice(rest.indexOf(t[0])+t[0].length).trim().replace(/[^A-Za-z]/g,'').toUpperCase().slice(0,10);
+      }else{
+        continue; // ligne de jour sans horaire ni repos → ignorée
+      }
+    }
+    rows.push(row);
+    if(rows.length>=7) break;
+  }
+
+  // Compléter / aligner sur 7 jours
+  if(rows.length){
+    rows.forEach((r,i)=>{ r.dayIndex=i; r.day=DAY_LETTERS[i]||r.day; });
+    while(rows.length<7){
+      const i=rows.length;
+      rows.push({day:DAY_LETTERS[i], dayIndex:i, dateNum:'', start:'', end:'', pause:0, poste:'', repos:false});
+    }
+    // Déduire les dates manquantes depuis la période
+    if(startDate){
+      rows.forEach((r,i)=>{
+        const d=new Date(startDate); d.setDate(d.getDate()+i);
+        if(!r.dateNum || +r.dateNum!==d.getDate()) r.dateNum=String(d.getDate()).padStart(2,'0');
+        r.fullDate=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+      });
+    }
+  }
+  return {label, range, rows};
+}
+
+function applyParsed(parsed){
+  const w=ensureWeek();
+  if(parsed.label) w.label=parsed.label;
+  if(parsed.range) w.range=parsed.range;
+  if(parsed.rows && parsed.rows.length){
+    w.rows=parsed.rows;
+  }
+  saveState();
+  renderAll();
+  const n=w.rows.filter(r=>!r.repos && (r.start||r.end)).length;
+  toast(n?('Planning détecté : '+n+' jour'+(n>1?'s':'')+' de travail. Vérifiez les horaires !'):'Planning importé — vérifiez et complétez les horaires.');
+  document.querySelector('main section:nth-of-type(2)').scrollIntoView({behavior:'smooth'});
+}
+
+/* =========================================================
+   RENDU
+   ========================================================= */
+const weekBody=document.getElementById('weekBody');
+
+function renderTable(){
+  const w=ensureWeek();
+  document.getElementById('weekLabel').value=w.label;
+  document.getElementById('weekRange').value=w.range;
+  document.getElementById('thresholdInput').value=state.threshold;
+  document.getElementById('weekBadge').textContent=w.label||'Semaine sans nom';
+
+  weekBody.innerHTML='';
+  w.rows.forEach((r,i)=>{
+    const mins=rowMinutes(r);
+    const tr=document.createElement('tr');
+    if(r.repos) tr.className='repos';
+    tr.innerHTML=
+      '<td><div class="day-name">'+DAY_NAMES[r.dayIndex!=null?r.dayIndex:i]+'</div>'+
+      '<div class="day-date">'+(r.fullDate?esc(r.fullDate):(r.dateNum?'le '+esc(r.dateNum):''))+'</div></td>'+
+      '<td>'+(r.repos?'—':'<input class="cell-input" data-i="'+i+'" data-f="start" value="'+esc(r.start)+'" placeholder="08:30" inputmode="numeric">')+'</td>'+
+      '<td>'+(r.repos?'—':'<input class="cell-input" data-i="'+i+'" data-f="end" value="'+esc(r.end)+'" placeholder="16:00" inputmode="numeric">')+'</td>'+
+      '<td>'+(r.repos?'—':'<input class="cell-input pause" data-i="'+i+'" data-f="pause" value="'+(+r.pause||0)+'" inputmode="numeric">')+'</td>'+
+      '<td>'+(r.repos?'—':'<input class="cell-input poste" data-i="'+i+'" data-f="poste" value="'+esc(r.poste)+'" placeholder="ZSCO">')+'</td>'+
+      '<td class="hours-cell">'+(r.repos?'':fmtMin(mins))+'</td>'+
+      '<td><button class="tag '+(r.repos?'repos':'work')+'" data-i="'+i+'" title="Cliquer pour basculer Repos / Travaillé">'+(r.repos?'Repos':'Travaillé')+'</button></td>'+
+      '<td><button class="row-del" data-i="'+i+'" title="Supprimer la ligne"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>';
+    weekBody.appendChild(tr);
+  });
+
+  weekBody.querySelectorAll('.cell-input').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const wk=currentWeek(); if(!wk) return;
+      const i=+e.target.dataset.i, f=e.target.dataset.f;
+      wk.rows[i][f]= f==='pause' ? (parseInt(e.target.value)||0) : e.target.value;
+      saveState();
+      const tr=e.target.closest('tr');
+      const hc=tr.querySelector('.hours-cell');
+      if(hc) hc.textContent=fmtMin(rowMinutes(wk.rows[i]));
+      renderStats(); renderHistory();
+    });
+  });
+  weekBody.querySelectorAll('.tag').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const wk=currentWeek(); if(!wk) return;
+      const i=+e.target.dataset.i;
+      wk.rows[i].repos=!wk.rows[i].repos;
+      saveState(); renderAll();
+    });
+  });
+  weekBody.querySelectorAll('.row-del').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const wk=currentWeek(); if(!wk) return;
+      wk.rows.splice(+e.target.dataset.i,1);
+      saveState(); renderAll(); toast('Ligne supprimée');
+    });
+  });
+}
+
+function renderStats(){
+  const w=currentWeek();
+  const total=w?weekMinutes(w):0;
+  const thresholdMin=(+state.threshold||15)*60;
+  const worked=w?w.rows.filter(r=>!r.repos && rowMinutes(r)>0):[];
+  const daysWorked=worked.length;
+  const repos=w?w.rows.filter(r=>r.repos).length:0;
+  const avg=daysWorked?Math.round(total/daysWorked):0;
+  const max=worked.reduce((m,r)=>Math.max(m,rowMinutes(r)),0);
+  const maxRow=worked.find(r=>rowMinutes(r)===max);
+
+  const tp=fmtMinParts(total), ap=fmtMinParts(avg), mp=fmtMinParts(max);
+  document.getElementById('statTotalVal').innerHTML=tp.h+'<small>h'+tp.m+'</small>';
+  document.getElementById('statDays').textContent=daysWorked;
+  document.getElementById('statDaysSub').textContent=repos+' jour'+(repos>1?'s':'')+' de repos';
+  document.getElementById('statAvg').innerHTML=ap.h+'<small>h'+ap.m+'</small>';
+  document.getElementById('statMax').innerHTML=mp.h+'<small>h'+mp.m+'</small>';
+  document.getElementById('statMaxSub').textContent=maxRow?DAY_NAMES[maxRow.dayIndex??0]:'';
+
+  // Statut seuil
+  const banner=document.getElementById('statusBanner');
+  const statTotal=document.getElementById('statTotal');
+  const diff=total-thresholdMin;
+  statTotal.classList.remove('hl-ok','hl-danger');
+  if(total>thresholdMin){
+    banner.className='status-banner on danger';
+    statTotal.classList.add('hl-danger');
+    document.getElementById('statusIcon').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>';
+    document.getElementById('statusTitle').textContent='Dépassement du seuil de '+state.threshold+'h !';
+    document.getElementById('statusDetail').innerHTML='Vous avez <b>'+fmtMin(total)+'</b> cette semaine, soit <b>'+fmtMin(diff)+'</b> de plus que le seuil autorisé ('+state.threshold+'h00).';
+    document.getElementById('statTotalSub').textContent='+'+fmtMin(diff)+' au-dessus du seuil';
+  }else{
+    banner.className='status-banner on ok';
+    statTotal.classList.add('hl-ok');
+    document.getElementById('statusIcon').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+    document.getElementById('statusTitle').textContent='Rien à signaler';
+    document.getElementById('statusDetail').innerHTML=total>0
+      ? 'Total de <b>'+fmtMin(total)+'</b> — il vous reste <b>'+fmtMin(thresholdMin-total)+'</b> avant le seuil de '+state.threshold+'h00.'
+      : 'Importez votre planning ou renseignez vos horaires pour lancer le comptage.';
+    document.getElementById('statTotalSub').textContent=total>0?('reste '+fmtMin(thresholdMin-total)+' dispo'):'';
+  }
+
+  // Barre de progression
+  const pct=thresholdMin?Math.min(100,total/thresholdMin*100):0;
+  const fill=document.getElementById('thresholdFill');
+  fill.style.width=pct+'%';
+  fill.className='t-fill'+(total>thresholdMin?' over':(pct>=80?' warn':''));
+  document.getElementById('thresholdLabel').textContent=fmtMin(total)+' / '+state.threshold+'h00';
+
+  // Barres par jour
+  const bars=document.getElementById('dayBars');
+  bars.innerHTML='';
+  if(w){
+    const maxDay=Math.max(60,...w.rows.map(rowMinutes));
+    w.rows.forEach((r,i)=>{
+      const mins=rowMinutes(r);
+      const d=document.createElement('div');
+      d.className='daybar'+(r.repos?' repos':'');
+      d.innerHTML='<div class="db-day">'+DAY_NAMES[r.dayIndex!=null?r.dayIndex:i]+'<span class="db-d">'+(r.fullDate||'')+'</span></div>'+
+        '<div class="db-track"><div class="db-fill" style="width:'+(mins/maxDay*100)+'%"></div></div>'+
+        '<div class="db-hours">'+(r.repos?'Repos':fmtMin(mins))+'</div>';
+      bars.appendChild(d);
+    });
+  }
+}
+
+function renderHistory(){
+  const list=document.getElementById('histList');
+  list.innerHTML='';
+  if(!state.weeks.length){
+    list.innerHTML='<div class="empty-state">Aucune semaine enregistrée pour le moment.<br>Importez une photo de planning pour commencer.</div>';
+    return;
+  }
+  state.weeks.forEach(w=>{
+    const total=weekMinutes(w);
+    const over=total>(+state.threshold||15)*60;
+    const item=document.createElement('div');
+    item.className='hist-item'+(w.id===state.currentId?' current':'');
+    item.innerHTML=
+      '<div><div class="h-title">'+esc(w.label||'Semaine sans nom')+(w.id===state.currentId?' ·':'')+'</div>'+
+      '<div class="h-meta">'+esc(w.range||'période non définie')+' · '+w.rows.filter(r=>!r.repos&&rowMinutes(r)>0).length+' j travaillés · '+(over?'<span style="color:var(--danger)">dépassement</span>':'OK')+'</div></div>'+
+      '<div class="h-hours '+(over?'over':'ok')+'">'+fmtMin(total)+'</div>'+
+      '<div class="h-actions">'+
+        '<button class="btn" data-load="'+w.id+'">Ouvrir</button>'+
+        '<button class="btn danger-ghost" data-del="'+w.id+'" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'+
+      '</div>';
+    list.appendChild(item);
+  });
+  list.querySelectorAll('[data-load]').forEach(b=>b.addEventListener('click',()=>{
+    state.currentId=b.dataset.load; saveState(); renderAll();
+    toast('Semaine chargée');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }));
+  list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
+    if(!confirm('Supprimer définitivement cette semaine ?')) return;
+    state.weeks=state.weeks.filter(w=>w.id!==b.dataset.del);
+    if(state.currentId===b.dataset.del){
+      state.currentId=state.weeks.length?state.weeks[0].id:null;
+    }
+    saveState(); renderAll(); toast('Semaine supprimée');
+  }));
+}
+
+function renderAll(){
+  renderTable(); renderStats(); renderHistory();
+}
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+document.getElementById('weekLabel').addEventListener('input', e=>{
+  const w=ensureWeek(); w.label=e.target.value; saveState();
+  document.getElementById('weekBadge').textContent=w.label||'Semaine sans nom';
+  renderHistory();
+});
+document.getElementById('weekRange').addEventListener('input', e=>{
+  const w=ensureWeek(); w.range=e.target.value; saveState(); renderHistory();
+});
+document.getElementById('thresholdInput').addEventListener('input', e=>{
+  state.threshold=Math.max(1,parseFloat(e.target.value)||15);
+  saveState(); renderStats(); renderHistory();
+});
+
+document.getElementById('btnAddRow').addEventListener('click', ()=>{
+  const w=ensureWeek();
+  w.rows.push({day:'+', dayIndex:w.rows.length%7, dateNum:'', start:'', end:'', pause:0, poste:'', repos:false});
+  saveState(); renderAll();
+});
+
+document.getElementById('btnClear').addEventListener('click', ()=>{
+  if(!confirm('Effacer toutes les lignes de la semaine en cours ?')) return;
+  const w=ensureWeek();
+  w.rows=DAY_LETTERS.map((l,i)=>({day:l, dayIndex:i, dateNum:'', start:'', end:'', pause:0, poste:'', repos:false}));
+  saveState(); renderAll(); toast('Semaine réinitialisée');
+});
+
+document.getElementById('btnPrint').addEventListener('click', ()=>window.print());
+
+document.getElementById('btnExportCsv').addEventListener('click', ()=>{
+  const w=currentWeek();
+  if(!w){ toast('Aucune semaine à exporter'); return; }
+  let csv='Jour;Date;Début;Fin;Pause (min);Poste;Heures;Statut\n';
+  w.rows.forEach((r,i)=>{
+    csv+=[DAY_NAMES[r.dayIndex!=null?r.dayIndex:i], r.fullDate||r.dateNum||'', r.repos?'':r.start, r.repos?'':r.end, r.repos?'':r.pause||0, r.repos?'':r.poste, r.repos?'':(rowMinutes(r)/60).toFixed(2).replace('.',','), r.repos?'Repos':'Travaillé'].join(';')+'\n';
+  });
+  csv+='TOTAL;;;;;;'+(weekMinutes(w)/60).toFixed(2).replace('.',',')+';\n';
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=(w.label||'semaine').replace(/[^\wÀ-ÿ -]+/g,'_')+'.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('CSV exporté');
+});
+
+/* ---------- Init ---------- */
+renderAll();
+</script>
 </body>
 </html>

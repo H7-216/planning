@@ -1,947 +1,320 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Planning Carrefour — Assistant d'heures</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<style>
-:root{
-  --bg:#141518;
-  --bg-soft:#1b1d22;
-  --bg-card:#1e2026;
-  --line:#2c2f37;
-  --line-soft:#262931;
-  --text:#f2f2ec;
-  --text-dim:#9a9da6;
-  --text-faint:#63666f;
-  --accent:#4f8ff7;
-  --accent-soft:rgba(79,143,247,.14);
-  --ok:#3ecf8e;
-  --ok-soft:rgba(62,207,142,.13);
-  --warn:#f5a524;
-  --warn-soft:rgba(245,165,36,.13);
-  --danger:#f2564b;
-  --danger-soft:rgba(242,86,75,.13);
-  --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
-  --sans:'Inter',-apple-system,'Segoe UI',sans-serif;
-  --radius:14px;
-}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{scroll-behavior:smooth}
-body{
-  background:var(--bg);color:var(--text);font-family:var(--sans);
-  font-size:15px;line-height:1.5;min-height:100vh;
-  padding-bottom:env(safe-area-inset-bottom);
-}
-::selection{background:var(--accent);color:#fff}
-
-/* ---------- Header ---------- */
-header{
-  position:sticky;top:0;z-index:50;
-  background:rgba(20,21,24,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  border-bottom:1px solid var(--line-soft);
-}
-.header-inner{
-  max-width:1080px;margin:0 auto;padding:14px 20px;
-  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-}
-.logo{
-  display:flex;align-items:center;gap:11px;font-weight:800;font-size:17px;letter-spacing:-.02em;
-}
-.logo-mark{
-  width:34px;height:34px;border-radius:9px;flex-shrink:0;
-  background:linear-gradient(135deg,#1256b8,#004e9f);
-  display:grid;place-items:center;
-}
-.logo-mark svg{width:19px;height:19px}
-.logo small{display:block;font-size:11px;font-weight:500;color:var(--text-dim);letter-spacing:.02em}
-.header-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
-.week-badge{
-  font-family:var(--mono);font-size:12px;color:var(--accent);
-  background:var(--accent-soft);border:1px solid rgba(79,143,247,.25);
-  padding:5px 11px;border-radius:999px;font-weight:500;white-space:nowrap;
-}
-
-/* ---------- Layout ---------- */
-main{max-width:1080px;margin:0 auto;padding:26px 20px 90px}
-section{margin-bottom:34px}
-.sec-title{
-  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;
-  color:var(--text-faint);margin-bottom:14px;display:flex;align-items:center;gap:10px;
-}
-.sec-title::after{content:'';flex:1;height:1px;background:var(--line-soft)}
-
-/* ---------- Buttons ---------- */
-.btn{
-  appearance:none;border:1px solid var(--line);background:var(--bg-card);color:var(--text);
-  font-family:var(--sans);font-size:13.5px;font-weight:600;
-  padding:10px 16px;border-radius:10px;cursor:pointer;
-  display:inline-flex;align-items:center;gap:8px;min-height:44px;
-  transition:border-color .15s,background .15s,transform .1s;
-}
-.btn:hover{border-color:var(--text-faint)}
-.btn:active{transform:scale(.97)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn.primary:hover{background:#3f7fe8}
-.btn.danger-ghost{color:var(--danger)}
-.btn.danger-ghost:hover{border-color:var(--danger);background:var(--danger-soft)}
-.btn.ghost{background:transparent;border-color:transparent;color:var(--text-dim)}
-.btn.ghost:hover{color:var(--text);background:var(--bg-soft)}
-.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
-.btn svg{width:16px;height:16px;flex-shrink:0}
-
-/* ---------- Upload ---------- */
-.dropzone{
-  border:1.5px dashed var(--line);border-radius:var(--radius);
-  background:var(--bg-soft);padding:38px 24px;text-align:center;cursor:pointer;
-  transition:border-color .2s,background .2s;
-}
-.dropzone:hover,.dropzone.drag{border-color:var(--accent);background:var(--accent-soft)}
-.dropzone .dz-icon{
-  width:52px;height:52px;margin:0 auto 14px;border-radius:14px;
-  background:var(--accent-soft);display:grid;place-items:center;color:var(--accent);
-}
-.dropzone .dz-icon svg{width:26px;height:26px}
-.dropzone p{font-weight:600;font-size:15px}
-.dropzone span{display:block;margin-top:5px;font-size:13px;color:var(--text-dim)}
-.dropzone kbd{
-  font-family:var(--mono);font-size:11px;background:var(--bg-card);
-  border:1px solid var(--line);border-radius:5px;padding:2px 6px;
-}
-#fileInput{display:none}
-
-.ocr-progress{margin-top:16px;display:none}
-.ocr-progress.on{display:block}
-.ocr-bar{height:6px;background:var(--bg-card);border-radius:99px;overflow:hidden}
-.ocr-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .25s}
-.ocr-label{margin-top:8px;font-size:12.5px;color:var(--text-dim);font-family:var(--mono)}
-
-.scan-preview{margin-top:18px;display:none;gap:16px;align-items:flex-start}
-.scan-preview.on{display:flex}
-.scan-preview img{
-  width:120px;max-height:160px;object-fit:cover;border-radius:10px;
-  border:1px solid var(--line);
-}
-.scan-preview .raw{
-  flex:1;min-width:0;font-family:var(--mono);font-size:11.5px;color:var(--text-dim);
-  background:var(--bg-soft);border:1px solid var(--line-soft);border-radius:10px;
-  padding:12px 14px;max-height:160px;overflow:auto;white-space:pre-wrap;word-break:break-word;
-}
-
-/* ---------- Meta ---------- */
-.meta-grid{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;
-}
-.field label{
-  display:block;font-size:11.5px;font-weight:600;text-transform:uppercase;
-  letter-spacing:.08em;color:var(--text-faint);margin-bottom:6px;
-}
-.field input,.field select{
-  width:100%;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;
-  color:var(--text);font-family:var(--sans);font-size:14px;font-weight:500;
-  padding:11px 13px;min-height:44px;outline:none;transition:border-color .15s;
-}
-.field input:focus,.field select:focus{border-color:var(--accent)}
-
-/* ---------- Status banner ---------- */
-.status-banner{
-  border-radius:var(--radius);padding:18px 20px;display:none;
-  align-items:center;gap:16px;border:1px solid;
-}
-.status-banner.on{display:flex}
-.status-banner.ok{background:var(--ok-soft);border-color:rgba(62,207,142,.35)}
-.status-banner.danger{background:var(--danger-soft);border-color:rgba(242,86,75,.4)}
-.status-banner .s-icon{
-  width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;
-}
-.status-banner.ok .s-icon{background:rgba(62,207,142,.18);color:var(--ok)}
-.status-banner.danger .s-icon{background:rgba(242,86,75,.18);color:var(--danger)}
-.status-banner .s-icon svg{width:22px;height:22px}
-.status-banner h3{font-size:16px;font-weight:700;letter-spacing:-.01em}
-.status-banner.ok h3{color:var(--ok)}
-.status-banner.danger h3{color:var(--danger)}
-.status-banner p{font-size:13px;color:var(--text-dim);margin-top:2px}
-.status-banner p b{color:var(--text);font-family:var(--mono)}
-
-/* ---------- Table ---------- */
-.table-wrap{
-  background:var(--bg-card);border:1px solid var(--line-soft);border-radius:var(--radius);
-  overflow:hidden;
-}
-.table-scroll{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:640px}
-thead th{
-  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;
-  color:var(--text-faint);text-align:left;padding:12px 14px;
-  border-bottom:1px solid var(--line);white-space:nowrap;
-  background:var(--bg-soft);
-}
-tbody td{padding:8px 10px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
-tbody tr:last-child td{border-bottom:none}
-tbody tr.repos{background:rgba(255,255,255,.015)}
-tbody tr.repos td{color:var(--text-faint)}
-td .day-name{font-weight:600;font-size:14px}
-td .day-date{font-family:var(--mono);font-size:11.5px;color:var(--text-faint)}
-.cell-input{
-  background:transparent;border:1px solid transparent;border-radius:8px;color:var(--text);
-  font-family:var(--mono);font-size:13.5px;font-weight:500;padding:7px 9px;width:78px;
-  outline:none;transition:border-color .15s,background .15s;min-height:40px;
-}
-.cell-input:hover{border-color:var(--line)}
-.cell-input:focus{border-color:var(--accent);background:var(--bg-soft)}
-.cell-input.pause{width:56px}
-.cell-input.poste{width:96px;font-family:var(--sans);font-weight:600;text-transform:uppercase;font-size:12.5px}
-.hours-cell{font-family:var(--mono);font-weight:700;font-size:14px;white-space:nowrap}
-.tag{
-  display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.06em;
-  padding:3px 9px;border-radius:999px;text-transform:uppercase;
-}
-.tag.repos{background:var(--bg-soft);color:var(--text-faint);border:1px solid var(--line)}
-.tag.work{background:var(--accent-soft);color:var(--accent);border:1px solid rgba(79,143,247,.3)}
-.row-del{
-  background:none;border:none;color:var(--text-faint);cursor:pointer;padding:10px;
-  border-radius:8px;min-width:44px;min-height:44px;
-}
-.row-del:hover{color:var(--danger);background:var(--danger-soft)}
-.row-del svg{width:15px;height:15px;display:block;margin:auto}
-.table-foot{padding:12px 14px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap}
-
-/* ---------- Stats ---------- */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
-.stat{
-  background:var(--bg-card);border:1px solid var(--line-soft);border-radius:var(--radius);
-  padding:16px 18px;
-}
-.stat .s-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-faint)}
-.stat .s-value{font-family:var(--mono);font-size:26px;font-weight:700;margin-top:6px;letter-spacing:-.02em}
-.stat .s-value small{font-size:13px;color:var(--text-dim);font-weight:500}
-.stat .s-sub{font-size:12px;color:var(--text-dim);margin-top:3px}
-.stat.hl-ok .s-value{color:var(--ok)}
-.stat.hl-danger .s-value{color:var(--danger)}
-
-.threshold-track{
-  margin-top:16px;background:var(--bg-card);border:1px solid var(--line-soft);
-  border-radius:var(--radius);padding:18px 20px;
-}
-.threshold-track .t-head{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--text-dim);margin-bottom:10px;flex-wrap:wrap;gap:6px}
-.threshold-track .t-head b{font-family:var(--mono);color:var(--text);font-size:14px}
-.t-bar{height:10px;background:var(--bg-soft);border-radius:99px;overflow:hidden;position:relative}
-.t-fill{height:100%;border-radius:99px;background:var(--ok);transition:width .5s cubic-bezier(.22,1,.36,1)}
-.t-fill.warn{background:var(--warn)}
-.t-fill.over{background:var(--danger)}
-
-/* ---------- Day bars ---------- */
-.daybars{display:flex;flex-direction:column;gap:8px}
-.daybar{display:grid;grid-template-columns:92px 1fr 74px;align-items:center;gap:12px;padding:6px 0}
-.daybar .db-day{font-size:13px;font-weight:600;color:var(--text-dim);white-space:nowrap}
-.daybar .db-day .db-d{font-family:var(--mono);font-size:11px;color:var(--text-faint);margin-left:6px}
-.db-track{height:22px;background:var(--bg-soft);border-radius:7px;overflow:hidden}
-.db-fill{height:100%;border-radius:7px;background:var(--accent);opacity:.85;transition:width .5s cubic-bezier(.22,1,.36,1)}
-.daybar.repos .db-fill{background:var(--line)}
-.db-hours{font-family:var(--mono);font-size:12.5px;font-weight:600;text-align:right;color:var(--text-dim)}
-.daybar:not(.repos) .db-hours{color:var(--text)}
-
-/* ---------- History ---------- */
-.hist-list{display:flex;flex-direction:column;gap:10px}
-.hist-item{
-  background:var(--bg-card);border:1px solid var(--line-soft);border-radius:var(--radius);
-  padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
-  transition:border-color .15s;
-}
-.hist-item:hover{border-color:var(--text-faint)}
-.hist-item.current{border-color:var(--accent)}
-.hist-item .h-title{font-weight:700;font-size:14.5px}
-.hist-item .h-meta{font-family:var(--mono);font-size:12px;color:var(--text-dim);margin-top:2px}
-.hist-item .h-hours{
-  font-family:var(--mono);font-weight:700;font-size:16px;margin-left:auto;white-space:nowrap;
-}
-.hist-item .h-hours.ok{color:var(--ok)}
-.hist-item .h-hours.over{color:var(--danger)}
-.hist-item .h-actions{display:flex;gap:6px}
-.empty-state{
-  text-align:center;padding:34px 20px;color:var(--text-faint);font-size:13.5px;
-  border:1px dashed var(--line);border-radius:var(--radius);
-}
-
-/* ---------- Toast ---------- */
-#toast{
-  position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(80px);
-  background:var(--bg-card);border:1px solid var(--line);color:var(--text);
-  padding:12px 20px;border-radius:12px;font-size:13.5px;font-weight:600;
-  opacity:0;transition:all .3s cubic-bezier(.22,1,.36,1);z-index:100;pointer-events:none;
-  box-shadow:0 12px 40px rgba(0,0,0,.5);max-width:90vw;text-align:center;
-}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-/* ---------- Footer note ---------- */
-.foot-note{
-  text-align:center;font-size:12px;color:var(--text-faint);margin-top:50px;
-  display:flex;align-items:center;justify-content:center;gap:7px;
-}
-.foot-note svg{width:13px;height:13px;color:var(--ok)}
-
-@media (max-width:640px){
-  main{padding:20px 14px 80px}
-  .header-inner{padding:12px 14px}
-  .logo{font-size:15px}
-  .scan-preview{flex-direction:column}
-  .scan-preview img{width:100%;max-height:220px}
-  .daybar{grid-template-columns:78px 1fr 64px;gap:8px}
-  .stat .s-value{font-size:22px}
-  .status-banner{flex-direction:row;padding:15px}
-}
-@media print{
-  body{background:#fff;color:#000}
-  header,.dropzone,.ocr-progress,.table-foot,#toast,.foot-note,.hist-item .h-actions,.row-del{display:none!important}
-  .table-wrap,.stat,.threshold-track,.hist-item{border-color:#ccc;background:#fff}
-  td,th{color:#000}
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f5ef">
+  <meta name="description" content="Votre planning hebdomadaire Carrefour, privé et enregistré sur cet appareil.">
+  <title>Planning Carrefour — Mon espace</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%2321634e'/%3E%3Cpath d='M32 14v36M14 32h36' stroke='white' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E">
+  <style>
+    :root{--paper:#f3f5ef;--surface:#fffefa;--ink:#1f3029;--muted:#68756e;--line:#dce3db;--green:#21634e;--green-dark:#174a3b;--mint:#e3f0e8;--lime:#d4ed95;--orange:#c65e3d;--orange-pale:#fae9df;--blue:#dfeaf0;--shadow:0 12px 34px rgba(28,55,43,.07);--serif:Georgia,"Times New Roman",serif;--sans:"Aptos","Segoe UI",system-ui,sans-serif}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45;min-height:100vh}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .shell{max-width:1320px;margin:0 auto;padding:24px 40px 48px}
+    .topbar{height:52px;display:flex;align-items:center;justify-content:space-between;margin-bottom:36px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:750;letter-spacing:-.03em;font-size:15px}
+    .brand-mark{width:34px;height:34px;border-radius:11px;background:var(--green);display:grid;place-items:center;color:#f4f5ef}
+    .brand-mark svg{width:19px;height:19px}
+    .brand span small{display:block;color:var(--muted);font-size:11px;font-weight:550;letter-spacing:.01em}
+    .top-actions{display:flex;gap:9px}
+    .button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:9px;padding:9px 13px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:650;font-size:12px;transition:background .16s,transform .16s,border-color .16s}
+    .button:hover{background:#f5f8f1;border-color:#afbeb3;transform:translateY(-1px)}
+    .button svg{width:15px;height:15px;flex:none}
+    .button-primary{background:var(--green);border-color:var(--green);color:white}
+    .button-primary:hover{background:var(--green-dark);border-color:var(--green-dark)}
+    .button-quiet{background:transparent}
+    .button-danger{color:#a3442e}
+    .intro{display:grid;grid-template-columns:1fr auto;align-items:end;gap:24px;margin-bottom:28px}
+    .eyebrow{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--green);font-weight:800;margin-bottom:9px}
+    h1{font:400 clamp(32px,4vw,47px)/1.04 var(--serif);letter-spacing:-.045em;margin:0}
+    .intro p{color:var(--muted);margin:10px 0 0;font-size:13px}
+    .privacy-note{display:flex;align-items:center;gap:8px;color:#557064;font-size:11px;padding:9px 12px;background:#e8eee7;border-radius:9px;white-space:nowrap}
+    .privacy-note svg{width:14px;height:14px}
+    .week-bar{background:var(--green);color:#fffefa;border-radius:15px;padding:20px 22px;display:flex;align-items:center;justify-content:space-between;gap:18px;box-shadow:var(--shadow);margin-bottom:18px}
+    .week-nav{display:flex;align-items:center;gap:15px}
+    .week-nav button{border:1px solid rgba(255,255,255,.24);background:transparent;color:white;border-radius:8px;width:34px;height:34px;display:grid;place-items:center}
+    .week-nav button:hover{background:rgba(255,255,255,.13)}
+    .week-nav svg{width:16px;height:16px}
+    .week-title{font:400 22px/1.1 var(--serif);letter-spacing:-.025em}
+    .week-dates{font-size:11px;color:#c9ded1;margin-top:4px}
+    .week-actions{display:flex;gap:8px;align-items:center}
+    .week-actions .button{background:rgba(255,255,255,.11);color:#fff;border-color:rgba(255,255,255,.24)}
+    .week-actions .button:hover{background:rgba(255,255,255,.2)}
+    .week-actions .button-primary{background:var(--lime);border-color:var(--lime);color:#26352a}
+    .week-actions .button-primary:hover{background:#e0f5b2}
+    .content-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;align-items:start;gap:18px}
+    .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 3px 14px rgba(28,55,43,.025)}
+    .schedule-panel{overflow:hidden}
+    .panel-head{padding:18px 20px 13px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+    .panel-head h2{margin:0;font:400 20px var(--serif);letter-spacing:-.02em}
+    .panel-head p{margin:5px 0 0;color:var(--muted);font-size:11px}
+    .week-sum-mini{font-size:10px;text-align:right;color:var(--muted)}
+    .week-sum-mini strong{display:block;color:var(--green);font-size:16px;letter-spacing:-.02em}
+    .schedule{padding:0 12px 12px}
+    .day-row{display:grid;grid-template-columns:minmax(116px,1.05fr) minmax(96px,.82fr) minmax(96px,.82fr) minmax(92px,.78fr) minmax(108px,1fr) 92px 34px;gap:10px;align-items:center;padding:11px 8px;border-top:1px solid #edf0e9;min-height:63px}
+    .day-row.header{min-height:30px;border:0;padding-top:4px;padding-bottom:4px;color:#89948c;text-transform:uppercase;letter-spacing:.09em;font-size:9px;font-weight:750}
+    .day-name{font-weight:700;font-size:12px}
+    .day-date{font-size:10px;color:var(--muted);margin-top:2px}
+    .day-label{display:flex;align-items:center;gap:8px}
+    .day-dot{width:7px;height:7px;border-radius:50%;background:#d6ded7;flex:none}
+    .day-row.work .day-dot{background:var(--green)}
+    .field{width:100%;height:34px;border:1px solid #dce4dc;border-radius:7px;background:#fffefa;color:var(--ink);padding:0 8px;font-size:12px;min-width:0}
+    .field:focus{outline:2px solid #9ec9a7;outline-offset:1px;border-color:transparent}
+    .field::placeholder{color:#a2aaa4}
+    .code-input{text-transform:uppercase;font-size:11px;font-weight:700;letter-spacing:.03em}
+    .duration{font-weight:750;color:var(--green);font-size:12px;font-variant-numeric:tabular-nums}
+    .duration.rest{color:#9aa49c;font-weight:550}
+    .clear-day{width:28px;height:28px;border:0;background:transparent;color:#9aa49c;border-radius:6px;font-size:18px;line-height:1}
+    .clear-day:hover{background:var(--orange-pale);color:var(--orange)}
+    .day-row.header .head-duration{text-align:left}
+    .schedule-foot{padding:10px 20px 16px;color:var(--muted);font-size:10px;border-top:1px solid #edf0e9}
+    .side-stack{display:grid;gap:14px}
+    .summary-panel{padding:19px}
+    .summary-top{display:flex;align-items:flex-start;justify-content:space-between}
+    .summary-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-weight:750}
+    .summary-value{font:400 37px/.95 var(--serif);letter-spacing:-.05em;margin-top:10px}
+    .summary-value small{font:600 14px var(--sans);letter-spacing:0;color:var(--muted)}
+    .summary-sub{font-size:11px;color:var(--muted);margin-top:9px}
+    .summary-emblem{width:35px;height:35px;border-radius:11px;background:var(--mint);display:grid;place-items:center;color:var(--green)}
+    .summary-emblem svg{width:17px;height:17px}
+    .threshold-box{margin-top:19px;padding-top:15px;border-top:1px solid var(--line)}
+    .threshold-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted)}
+    .threshold-row strong{color:var(--ink);font-size:12px}
+    .threshold-input{width:52px;border:1px solid var(--line);background:transparent;border-radius:6px;padding:4px 6px;text-align:right;font-size:12px;font-weight:700;color:var(--ink)}
+    .meter{height:8px;background:#edf0e8;border-radius:10px;margin:11px 0 9px;overflow:hidden}
+    .meter-fill{height:100%;width:0;background:#91b578;border-radius:inherit;transition:width .25s}
+    .meter-fill.over{background:var(--orange)}
+    .alert{display:none;align-items:flex-start;gap:9px;background:var(--orange-pale);color:#803e2d;padding:11px 12px;border-radius:9px;font-size:11px;line-height:1.4;margin-top:13px}
+    .alert.success{background:#e8f2e6;color:#2d6145}
+    .alert.visible{display:flex}
+    .alert svg{width:15px;height:15px;flex:none;margin-top:1px}
+    .alert strong{display:block;margin-bottom:2px}
+    .saved-panel{padding:17px 18px 14px}
+    .side-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .side-title h3{font:400 18px var(--serif);margin:0;letter-spacing:-.02em}
+    .count-pill{font-size:10px;background:#edf2eb;color:#637368;border-radius:20px;padding:4px 8px}
+    .saved-list{display:grid;gap:5px;max-height:220px;overflow:auto}
+    .saved-item{display:flex;align-items:center;justify-content:space-between;gap:7px;border-radius:8px;padding:9px 8px}
+    .saved-item.active{background:#eaf2e9}
+    .saved-select{background:none;border:0;text-align:left;padding:0;color:var(--ink);min-width:0;flex:1}
+    .saved-select strong{font-size:11px;display:block}
+    .saved-select span{font-size:10px;color:var(--muted);display:block;margin-top:2px}
+    .saved-hours{font-size:11px;font-weight:750;white-space:nowrap;color:var(--green)}
+    .saved-empty{text-align:center;padding:16px 8px;color:var(--muted);font-size:11px;background:#f7f8f3;border-radius:8px}
+    .saved-tools{display:flex;gap:6px;border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+    .saved-tools .button{padding:7px 9px;flex:1;font-size:10px}
+    .import-panel{padding:17px 18px}
+    .import-panel .side-title{margin-bottom:6px}
+    .import-panel p{font-size:11px;color:var(--muted);margin:0 0 12px}
+    .import-actions{display:flex;gap:7px}
+    .import-actions .button{flex:1;padding:8px 9px;font-size:10px}
+    .fine-print{font-size:10px!important;margin:10px 0 0!important;line-height:1.5}
+    .toast{position:fixed;right:22px;bottom:22px;padding:12px 16px;background:var(--ink);color:white;border-radius:9px;box-shadow:var(--shadow);font-size:12px;z-index:20;opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity .2s,transform .2s}
+    .toast.show{opacity:1;transform:translateY(0)}
+    dialog{width:min(900px,calc(100% - 28px));max-height:90vh;border:1px solid var(--line);border-radius:15px;padding:0;background:var(--surface);color:var(--ink);box-shadow:0 24px 90px rgba(15,40,28,.26)}
+    dialog::backdrop{background:rgba(19,35,28,.48);backdrop-filter:blur(2px)}
+    .dialog-head{padding:18px 21px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:18px}
+    .dialog-head h2{font:400 24px var(--serif);margin:0;letter-spacing:-.03em}
+    .dialog-head p{font-size:11px;color:var(--muted);margin:5px 0 0}
+    .dialog-close{border:0;background:#eff2eb;border-radius:7px;width:30px;height:30px;font-size:18px;color:var(--muted)}
+    .dialog-body{padding:18px 21px 21px;overflow:auto;max-height:calc(90vh - 150px)}
+    .upload-box{border:1px dashed #aab9ac;border-radius:11px;background:#f7f9f4;min-height:116px;display:grid;place-items:center;text-align:center;padding:18px;cursor:pointer}
+    .upload-box:hover{background:#eff5ed;border-color:var(--green)}
+    .upload-box svg{width:24px;height:24px;color:var(--green);margin-bottom:6px}
+    .upload-box strong{display:block;font-size:12px}
+    .upload-box span{font-size:10px;color:var(--muted);display:block;margin-top:4px}
+    .ocr-meta{margin-top:13px;padding:10px 12px;background:#eef3eb;border-radius:8px;font-size:10px;color:#53675a}
+    .ocr-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0}
+    .ocr-status{font-size:11px;color:var(--muted)}
+    .ocr-progress{height:5px;background:#e8ede6;border-radius:5px;margin-top:6px;overflow:hidden}
+    .ocr-progress div{height:100%;width:0;background:var(--green);transition:width .25s}
+    .ocr-review{display:none}
+    .ocr-review.visible{display:block}
+    .ocr-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .ocr-day{border:1px solid var(--line);border-radius:9px;padding:10px}
+    .ocr-day-top{font-weight:700;font-size:11px;margin-bottom:8px}
+    .ocr-fields{display:grid;grid-template-columns:1fr 1fr 72px;gap:6px}
+    .ocr-fields label{font-size:9px;color:var(--muted)}
+    .ocr-fields input{display:block;width:100%;height:32px;margin-top:3px;border:1px solid var(--line);border-radius:6px;padding:0 6px;font-size:11px}
+    .ocr-source{font-size:10px;color:var(--muted);margin:12px 0}
+    .dialog-foot{padding:12px 21px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+    .hidden{display:none!important}
+    .print-only{display:none}
+    @media(max-width:1000px){.content-grid{grid-template-columns:minmax(0,1fr) 285px}.day-row{grid-template-columns:minmax(94px,1fr) 82px 82px 76px 92px 65px 27px;gap:7px}.field{padding:0 6px}}
+    @media(max-width:760px){.shell{padding:15px 16px 32px}.topbar{margin-bottom:25px}.top-actions .button span{display:none}.top-actions .button{width:37px;height:37px;padding:0}.intro{grid-template-columns:1fr;align-items:start;gap:12px}.privacy-note{justify-self:start}.week-bar{align-items:flex-start;flex-direction:column;padding:17px}.week-actions{width:100%}.week-actions .button{flex:1}.content-grid{grid-template-columns:1fr}.side-stack{grid-template-columns:repeat(2,minmax(0,1fr))}.summary-panel{grid-row:span 2}.schedule-panel{overflow:visible}.schedule{padding:0 11px 9px}.day-row{grid-template-columns:minmax(80px,1fr) 1fr 1fr;gap:7px;padding:10px 5px;position:relative}.day-row.header{display:none}.day-row .field{height:33px}.day-row .field.break{grid-column:2}.day-row .field.code-input{grid-column:3}.day-row .duration{grid-column:2;grid-row:2}.day-row .clear-day{position:absolute;right:4px;top:7px}.day-label{grid-column:1;grid-row:1 / span 2;align-self:center;align-items:flex-start}.day-date{display:block}.schedule-foot{padding:10px 14px 14px}}
+    @media(max-width:480px){.shell{padding:12px 11px 26px}.brand{font-size:14px}.week-nav{gap:9px}.week-title{font-size:20px}.week-actions{gap:6px}.week-actions .button{font-size:10px;padding:8px 6px}.side-stack{grid-template-columns:1fr}.summary-panel{grid-row:auto}.saved-list{max-height:180px}.ocr-grid{grid-template-columns:1fr}.dialog-head,.dialog-body{padding-left:15px;padding-right:15px}.dialog-foot{padding-left:15px;padding-right:15px}}
+    @media print{body{background:#fff}.shell{max-width:none;padding:0}.topbar,.week-actions,.side-stack,.clear-day,.top-actions,.schedule-foot{display:none!important}.intro{margin-bottom:18px}.privacy-note{display:none}.week-bar{background:#fff;color:var(--ink);box-shadow:none;border:1px solid #bbb;margin-bottom:12px;padding:12px 15px}.week-dates{color:#555}.week-nav button{display:none}.content-grid{display:block}.panel{box-shadow:none;border-color:#aaa}.schedule-panel{border-radius:0}.panel-head{padding:12px 14px}.day-row{border-color:#ddd;min-height:48px}.field{border:0;background:transparent;padding:0;height:auto!important;appearance:none;color:var(--ink)}.day-row .field::placeholder{color:transparent}.schedule-foot{display:block!important}.print-only{display:block}}
+  </style>
 </head>
 <body>
-
-<header>
-  <div class="header-inner">
-    <div class="logo">
-      <div class="logo-mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 9h18M9 14l2 2 4-4"/></svg>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12h16M12 4v16M6.5 6.5l11 11m0-11-11 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+        <span>Planning Carrefour<small>Mon espace personnel</small></span>
       </div>
-      <div>Mon Planning<small>Carrefour · Assistant d'heures</small></div>
-    </div>
-    <div class="header-actions">
-      <span class="week-badge" id="weekBadge">Aucune semaine</span>
-      <button class="btn ghost" id="btnPrint" title="Imprimer">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg>
-      </button>
-    </div>
-  </div>
-</header>
-
-<main>
-
-  <!-- 1. IMPORT -->
-  <section>
-    <div class="sec-title">1 · Importer ma semaine</div>
-    <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Importer une photo du planning">
-      <div class="dz-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <div class="top-actions">
+        <button class="button button-quiet" id="backupBtn" title="Exporter une sauvegarde JSON"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sauvegarder</span></button>
+        <button class="button button-quiet" id="restoreBtn" title="Importer une sauvegarde JSON"><svg viewBox="0 0 24 24" fill="none"><path d="M12 15V3m0 0L8 7m4-4 4 4M5 15v5h14v-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Restaurer</span></button>
+        <button class="button button-quiet" id="printBtn" title="Imprimer le planning"><svg viewBox="0 0 24 24" fill="none"><path d="M7 8V4h10v4M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2m-10-3h10v6H7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span>Imprimer</span></button>
       </div>
-      <p>Photographiez ou glissez votre planning ici</p>
-      <span>Lecture automatique (OCR) · ou <kbd>coller</kbd> une image · JPG / PNG</span>
-    </div>
-    <input type="file" id="fileInput" accept="image/*" capture="environment">
-    <div class="ocr-progress" id="ocrProgress">
-      <div class="ocr-bar"><div class="ocr-fill" id="ocrFill"></div></div>
-      <div class="ocr-label" id="ocrLabel">Analyse en cours…</div>
-    </div>
-    <div class="scan-preview" id="scanPreview">
-      <img id="previewImg" alt="Aperçu du planning scanné">
-      <div class="raw" id="rawText"></div>
-    </div>
-  </section>
+    </header>
 
-  <!-- 2. SEMAINE -->
-  <section>
-    <div class="sec-title">2 · Ma semaine</div>
-    <div class="meta-grid" style="margin-bottom:14px">
-      <div class="field">
-        <label>Nom de la semaine</label>
-        <input type="text" id="weekLabel" placeholder="Ex : Semaine 40 de 2026">
-      </div>
-      <div class="field">
-        <label>Période</label>
-        <input type="text" id="weekRange" placeholder="Ex : Du 28/09/2026 au 04/10/2026">
-      </div>
-      <div class="field">
-        <label>Seuil d'alerte hebdo (heures)</label>
-        <input type="number" id="thresholdInput" min="1" max="60" step="0.5" value="15">
-      </div>
-    </div>
-
-    <div class="status-banner" id="statusBanner">
-      <div class="s-icon" id="statusIcon"></div>
+    <section class="intro">
       <div>
-        <h3 id="statusTitle"></h3>
-        <p id="statusDetail"></p>
+        <div class="eyebrow">Votre semaine, en clair</div>
+        <h1>Le planning de la semaine.</h1>
+        <p>Vérifiez vos horaires, corrigez-les et gardez le compte juste.</p>
       </div>
+      <div class="privacy-note"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3 5 6v5c0 4.7 2.9 8.1 7 10 4.1-1.9 7-5.3 7-10V6l-7-3Z" stroke="currentColor" stroke-width="1.6"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Privé sur cet appareil · aucune création de compte</div>
+    </section>
+
+    <section class="week-bar" aria-label="Navigation entre les semaines">
+      <div class="week-nav">
+        <button id="prevWeek" aria-label="Semaine précédente"><svg viewBox="0 0 24 24" fill="none"><path d="m15 18-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div><div class="week-title" id="weekTitle">Semaine 40, 2026</div><div class="week-dates" id="weekDates">28 septembre – 4 octobre 2026</div></div>
+        <button id="nextWeek" aria-label="Semaine suivante"><svg viewBox="0 0 24 24" fill="none"><path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="week-actions">
+        <button class="button" id="todayBtn">Aller à cette semaine</button>
+        <button class="button button-primary" id="saveWeekBtn"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4h12l3 3v13H4V4h1Zm2 0v6h10V4M8 20v-7h8v7" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Enregistrer la semaine</button>
+      </div>
+    </section>
+
+    <div class="content-grid">
+      <section class="panel schedule-panel" aria-labelledby="scheduleTitle">
+        <div class="panel-head">
+          <div><h2 id="scheduleTitle">Mes horaires</h2><p>Modifiez les heures, la pause ou le code directement dans le tableau.</p></div>
+          <div class="week-sum-mini">Total semaine<strong id="compactTotal">15h15</strong></div>
+        </div>
+        <div class="schedule" id="schedule" role="table" aria-label="Horaires de la semaine"></div>
+        <div class="schedule-foot">Durée calculée : heure de fin − heure de début − pause renseignée. Aucune pause n’est déduite automatiquement.</div>
+      </section>
+
+      <aside class="side-stack" aria-label="Résumé et outils">
+        <section class="panel summary-panel">
+          <div class="summary-top">
+            <div><div class="summary-label">Temps planifié</div><div class="summary-value" id="weekTotal">15<small>h</small>15</div><div class="summary-sub" id="dailyAverage">Sur 3 journées travaillées</div></div>
+            <div class="summary-emblem"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+          </div>
+          <div class="threshold-box">
+            <div class="threshold-row"><span>Seuil hebdomadaire</span><label><input id="thresholdInput" class="threshold-input" type="number" min="1" max="60" step="0.5" value="15" aria-label="Seuil hebdomadaire en heures"> h</label></div>
+            <div class="meter" aria-hidden="true"><div class="meter-fill" id="meterFill"></div></div>
+            <div class="threshold-row"><span id="thresholdStatus">15 h disponibles</span><strong id="thresholdRight">15 h</strong></div>
+            <div class="alert" id="thresholdAlert" role="status"><svg id="thresholdIcon" viewBox="0 0 24 24" fill="none" aria-hidden="true"></svg><span><strong id="thresholdHeading">Rien à signaler</strong><span id="alertCopy">Aucune heure au-dessus du seuil configuré.</span></span></div>
+          </div>
+        </section>
+
+        <section class="panel saved-panel">
+          <div class="side-title"><h3>Semaines gardées</h3><span class="count-pill" id="savedCount">1 semaine</span></div>
+          <div class="saved-list" id="savedList"></div>
+          <div class="saved-tools">
+            <button class="button" id="newWeekBtn">+ Nouvelle semaine</button>
+            <button class="button button-danger" id="deleteWeekBtn" title="Supprimer la semaine active">Supprimer</button>
+          </div>
+        </section>
+
+        <section class="panel import-panel">
+          <div class="side-title"><h3>Importer une photo</h3></div>
+          <p>Préremplissez les horaires depuis une photo de votre planning papier. Vous relisez et corrigez avant l’enregistrement.</p>
+          <div class="import-actions">
+            <button class="button button-primary" id="openOcrBtn"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><circle cx="9" cy="11" r="2" stroke="currentColor" stroke-width="1.6"/><path d="m21 15-5-5L5 19" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Choisir une image</button>
+            <button class="button" id="ocrAgainBtn" title="Ouvrir la vérification OCR">Relire / corriger</button>
+          </div>
+          <p class="fine-print">Lecture sur votre appareil avec Tesseract.js. Nécessite une connexion internet pour charger le moteur et le français. La photo n’est jamais envoyée.</p>
+        </section>
+      </aside>
     </div>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <input class="hidden" type="file" id="backupFile" accept="application/json,.json">
 
-    <div class="table-wrap" style="margin-top:14px">
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Jour</th><th>Début</th><th>Fin</th><th>Pause (min)</th><th>Poste</th><th>Heures</th><th>Statut</th><th></th>
-            </tr>
-          </thead>
-          <tbody id="weekBody"></tbody>
-        </table>
-      </div>
-      <div class="table-foot">
-        <button class="btn" id="btnAddRow">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-          Ajouter une ligne
-        </button>
-        <button class="btn" id="btnExportCsv">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-          Export CSV
-        </button>
-        <button class="btn danger-ghost" id="btnClear" style="margin-left:auto">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-          Tout effacer
-        </button>
-      </div>
+  <dialog id="ocrDialog" aria-labelledby="ocrTitle">
+    <div class="dialog-head"><div><h2 id="ocrTitle">Lire une photo de planning</h2><p>Le résultat OCR est une proposition, jamais une vérification. Contrôlez chaque horaire avant d’appliquer.</p></div><button class="dialog-close" id="closeOcr" aria-label="Fermer">×</button></div>
+    <div class="dialog-body">
+      <label class="upload-box" for="imageFile"><svg viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L8 8m4-4 4 4M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span><strong id="uploadLabel">Choisir une photo ou la déposer ici</strong><span>JPG, PNG ou WebP · traitement local dans ce navigateur</span></span></label>
+      <input class="hidden" type="file" id="imageFile" accept="image/*">
+      <div class="ocr-meta">Confidentialité : la photo reste dans votre navigateur. Tesseract.js et les données de langue française sont chargés depuis un CDN uniquement lorsque vous lancez la lecture ; une connexion internet est nécessaire. L’ajout manuel reste disponible hors ligne.</div>
+      <div class="ocr-controls"><div class="ocr-status" id="ocrStatus">Aucune image sélectionnée.<div class="ocr-progress"><div id="ocrProgress"></div></div></div><button class="button button-primary" id="runOcrBtn" disabled>Lancer la lecture</button></div>
+      <div class="ocr-review" id="ocrReview"><div class="side-title"><h3>Vérifier les horaires proposés</h3><span class="count-pill">À confirmer</span></div><label style="display:flex;align-items:center;gap:10px;margin:12px 0;font-size:12px;color:var(--muted)">Lundi de la semaine détectée <input id="ocrWeekStart" type="date" aria-label="Lundi de la semaine détectée"></label><div class="ocr-grid" id="ocrGrid"></div><p class="ocr-source" id="ocrText"></p></div>
     </div>
-  </section>
+    <div class="dialog-foot"><button class="button" id="cancelOcr">Annuler</button><button class="button button-primary" id="applyOcrBtn" disabled>Appliquer à cette semaine</button></div>
+  </dialog>
 
-  <!-- 3. COMPTEURS -->
-  <section>
-    <div class="sec-title">3 · Comptage des heures</div>
-    <div class="stats-grid">
-      <div class="stat" id="statTotal">
-        <div class="s-label">Total semaine</div>
-        <div class="s-value" id="statTotalVal">0<small>h00</small></div>
-        <div class="s-sub" id="statTotalSub"></div>
-      </div>
-      <div class="stat">
-        <div class="s-label">Jours travaillés</div>
-        <div class="s-value" id="statDays">0</div>
-        <div class="s-sub" id="statDaysSub"></div>
-      </div>
-      <div class="stat">
-        <div class="s-label">Moyenne / jour travaillé</div>
-        <div class="s-value" id="statAvg">0<small>h00</small></div>
-        <div class="s-sub">sur les jours de shift</div>
-      </div>
-      <div class="stat">
-        <div class="s-label">Plus long shift</div>
-        <div class="s-value" id="statMax">0<small>h00</small></div>
-        <div class="s-sub" id="statMaxSub"></div>
-      </div>
-    </div>
-
-    <div class="threshold-track">
-      <div class="t-head">
-        <span>Progression vers le seuil hebdomadaire</span>
-        <b id="thresholdLabel">0h00 / 15h00</b>
-      </div>
-      <div class="t-bar"><div class="t-fill" id="thresholdFill" style="width:0%"></div></div>
-    </div>
-
-    <div style="height:14px"></div>
-    <div class="table-wrap" style="padding:16px 18px">
-      <div class="daybars" id="dayBars"></div>
-    </div>
-  </section>
-
-  <!-- 4. HISTORIQUE -->
-  <section>
-    <div class="sec-title">4 · Historique (sauvegarde locale automatique)</div>
-    <div class="hist-list" id="histList"></div>
-  </section>
-
-  <div class="foot-note">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-    Vos données restent dans ce navigateur, même après fermeture. Rien n'est envoyé sur internet (hors moteur OCR).
-  </div>
-
-</main>
-
-<div id="toast"></div>
-<script>
-'use strict';
-/* =========================================================
-   Mon Planning — Carrefour
-   OCR (Tesseract.js) + parsing + comptage + localStorage
-   ========================================================= */
-
-const LS_KEY   = 'carrefour_planner_v1';
-const DAY_LETTERS = ['L','M','M','J','V','S','D'];
-const DAY_NAMES   = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
-
-/* ---------- State ---------- */
-let state = loadState();
-
-function defaultState(){
-  return {
-    threshold: 15,
-    currentId: null,
-    weeks: [] // {id, label, range, createdAt, rows:[{day,dateNum,start,end,pause,poste,repos}]}
-  };
-}
-function loadState(){
-  try{
-    const raw = localStorage.getItem(LS_KEY);
-    if(!raw) return defaultState();
-    const s = JSON.parse(raw);
-    return Object.assign(defaultState(), s);
-  }catch(e){ return defaultState(); }
-}
-function saveState(){
-  localStorage.setItem(LS_KEY, JSON.stringify(state));
-}
-function newWeek(label, range){
-  return {
-    id: 'w' + Date.now() + Math.random().toString(36).slice(2,7),
-    label: label || '',
-    range: range || '',
-    createdAt: Date.now(),
-    rows: DAY_LETTERS.map((l,i)=>({day:l, dayIndex:i, dateNum:'', start:'', end:'', pause:0, poste:'', repos:false}))
-  };
-}
-function currentWeek(){
-  return state.weeks.find(w=>w.id===state.currentId) || null;
-}
-function ensureWeek(){
-  let w = currentWeek();
-  if(!w){
-    w = newWeek('', '');
-    state.weeks.unshift(w);
-    state.currentId = w.id;
-    saveState();
-  }
-  return w;
-}
-
-/* ---------- Helpers temps ---------- */
-function toMin(t){
-  if(!t) return null;
-  const m = String(t).trim().match(/^(\d{1,2})[:hH.](\d{2})$/);
-  if(!m) return null;
-  const h = +m[1], mi = +m[2];
-  if(h>29 || mi>59) return null;
-  return h*60+mi;
-}
-function fmtMin(min){
-  if(min==null || isNaN(min)) return '0h00';
-  const neg = min<0; min=Math.abs(min);
-  const h=Math.floor(min/60), m=Math.round(min%60);
-  return (neg?'-':'')+h+'h'+String(m).padStart(2,'0');
-}
-function fmtMinParts(min){
-  if(min==null||isNaN(min)) return {h:'0', m:'00'};
-  const h=Math.floor(min/60), m=Math.round(min%60);
-  return {h:String(h), m:String(m).padStart(2,'0')};
-}
-function rowMinutes(r){
-  if(r.repos) return 0;
-  const s=toMin(r.start), e=toMin(r.end);
-  if(s==null||e==null) return 0;
-  let d=e-s; if(d<0) d+=1440;            // shift de nuit
-  d-= (+r.pause||0);
-  return Math.max(0,d);
-}
-function weekMinutes(w){
-  return w.rows.reduce((a,r)=>a+rowMinutes(r),0);
-}
-function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-/* ---------- Toast ---------- */
-let toastTimer=null;
-function toast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
-}
-
-/* =========================================================
-   OCR + PARSING
-   ========================================================= */
-const dropzone   = document.getElementById('dropzone');
-const fileInput  = document.getElementById('fileInput');
-const ocrProgress= document.getElementById('ocrProgress');
-const ocrFill    = document.getElementById('ocrFill');
-const ocrLabel   = document.getElementById('ocrLabel');
-
-dropzone.addEventListener('click', ()=>fileInput.click());
-dropzone.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' ') fileInput.click(); });
-fileInput.addEventListener('change', e=>{ if(e.target.files[0]) handleImage(e.target.files[0]); fileInput.value=''; });
-
-['dragover','dragenter'].forEach(ev=>dropzone.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.add('drag');}));
-['dragleave','drop'].forEach(ev=>dropzone.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.remove('drag');}));
-dropzone.addEventListener('drop', e=>{
-  const f=e.dataTransfer.files && e.dataTransfer.files[0];
-  if(f && f.type.startsWith('image/')) handleImage(f);
-});
-// Coller une image (Ctrl+V)
-window.addEventListener('paste', e=>{
-  const items=(e.clipboardData||{}).items||[];
-  for(const it of items){
-    if(it.type && it.type.startsWith('image/')){ handleImage(it.getAsFile()); break; }
-  }
-});
-
-/* Pré-traitement : niveaux de gris + contraste + upscale */
-function preprocess(file){
-  return new Promise((resolve,reject)=>{
-    const img=new Image();
-    img.onload=()=>{
-      const scale=Math.min(2.2, 2200/img.width) || 1;
-      const c=document.createElement('canvas');
-      c.width=Math.round(img.width*scale); c.height=Math.round(img.height*scale);
-      const ctx=c.getContext('2d');
-      ctx.drawImage(img,0,0,c.width,c.height);
-      const d=ctx.getImageData(0,0,c.width,c.height), p=d.data;
-      for(let i=0;i<p.length;i+=4){
-        let g=0.299*p[i]+0.587*p[i+1]+0.114*p[i+2];
-        g=((g-128)*1.35)+128;                 // contraste
-        g=g<0?0:g>255?255:g;
-        p[i]=p[i+1]=p[i+2]=g;
-      }
-      ctx.putImageData(d,0,0);
-      c.toBlob(b=>resolve(b),'image/png');
-      URL.revokeObjectURL(img.src);
-    };
-    img.onerror=reject;
-    img.src=URL.createObjectURL(file);
-  });
-}
-
-async function handleImage(file){
-  ocrProgress.classList.add('on');
-  ocrFill.style.width='0%';
-  ocrLabel.textContent='Préparation de l\'image…';
-  document.getElementById('previewImg').src=URL.createObjectURL(file);
-
-  let text='';
-  try{
-    const blob=await preprocess(file);
-    const res=await Tesseract.recognize(blob,'fra',{
-      logger:m=>{
-        if(m.status==='recognizing text'){
-          ocrFill.style.width=Math.round(m.progress*100)+'%';
-          ocrLabel.textContent='Lecture du planning… '+Math.round(m.progress*100)+'%';
-        }else{
-          ocrLabel.textContent=m.status+'…';
-        }
-      }
-    });
-    text=res.data.text||'';
-  }catch(err){
-    console.error(err);
-    ocrLabel.textContent='';
-    ocrProgress.classList.remove('on');
-    toast('OCR indisponible (hors ligne ?) — saisie manuelle possible ci-dessous.');
-    ensureWeek(); renderAll();
-    return;
-  }
-  ocrLabel.textContent='Analyse terminée ✓';
-  setTimeout(()=>ocrProgress.classList.remove('on'),1200);
-
-  document.getElementById('scanPreview').classList.add('on');
-  document.getElementById('rawText').textContent='Texte lu par l\'OCR :\n\n'+text.trim();
-
-  applyParsed(parseSchedule(text));
-}
-
-/* ---------- Parsing du texte OCR ---------- */
-function normalizeLine(l){
-  return l.replace(/[|]/g,' ').replace(/\s+/g,' ').trim();
-}
-
-function parseSchedule(text){
-  const lines=text.split(/\n/).map(normalizeLine).filter(Boolean);
-
-  // Titre : "Semaine 40 de 2026"
-  let label='', range='';
-  const mWeek=text.match(/semaine\s+(\d{1,2})\s+de\s+(\d{4})/i);
-  if(mWeek) label='Semaine '+mWeek[1]+' de '+mWeek[2];
-  const mRange=text.match(/du\s+(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})\s+au\s+(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})/i);
-  if(mRange) range='Du '+mRange[1]+' au '+mRange[2];
-
-  // Dates de la période pour déduire les numéros de jour
-  let startDate=null;
-  if(mRange){
-    const p=mRange[1].split(/[\/\-.]/).map(Number);
-    if(p[2]<100) p[2]+=2000;
-    startDate=new Date(p[2],p[1]-1,p[0]);
-  }
-
-  const rows=[];
-  const dayRe=/^([LMJVSDmjvsd])\s*[,.\-]?\s*(\d{1,2})\b\s*(.*)$/;
-  const timeRe=/(\d{1,2})\s*[:hH\.]\s*(\d{2})\s*[-–—aàA]\s*(\d{1,2})\s*[:hH\.]\s*(\d{2})/;
-
-  for(const line of lines){
-    const m=line.match(dayRe);
-    if(!m) continue;
-    let letter=m[1].toUpperCase();
-    const dateNum=m[2];
-    let rest=m[3]||'';
-
-    // écarter les lignes parasites (ex. "Du 28/09...au...")
-    if(/^du\b/i.test(line)) continue;
-
-    const row={day:letter, dayIndex:rows.length, dateNum, start:'', end:'', pause:0, poste:'', repos:false};
-
-    if(/repos/i.test(rest)){
-      row.repos=true;
-    }else{
-      const t=rest.match(timeRe);
-      if(t){
-        row.start=String(+t[1]).padStart(2,'0')+':'+t[2];
-        row.end  =String(+t[3]).padStart(2,'0')+':'+t[4];
-        row.poste=rest.slice(rest.indexOf(t[0])+t[0].length).trim().replace(/[^A-Za-z]/g,'').toUpperCase().slice(0,10);
-      }else{
-        continue; // ligne de jour sans horaire ni repos → ignorée
-      }
+  <script>
+  (() => {
+    "use strict";
+    const STORAGE_KEY="planning-carrefour-v1";
+    const DAYS=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
+    const SHORT=["lun.","mar.","mer.","jeu.","ven.","sam.","dim."];
+    const DEFAULT_START="2026-09-28";
+    const $=s=>document.querySelector(s);
+    let db, activeKey=DEFAULT_START, pendingImage=null, recognizedText="";
+    const blankDay=()=>({start:"",end:"",break:0,code:""});
+    function demoWeek(){return {start:DEFAULT_START,days:[blankDay(),blankDay(),blankDay(),{start:"19:00",end:"22:00",break:0,code:"ZSCO"},blankDay(),{start:"08:30",end:"16:00",break:0,code:"DRIVCLT"},{start:"08:00",end:"12:45",break:0,code:"ROLL"}]}}
+    function loadDb(){try{const parsed=JSON.parse(localStorage.getItem(STORAGE_KEY));if(parsed&&parsed.weeks)return parsed}catch(e){}return {threshold:15,weeks:{[DEFAULT_START]:demoWeek()}}}
+    db=loadDb();
+    if(!db.weeks[DEFAULT_START])db.weeks[DEFAULT_START]=demoWeek();
+    function saveDb(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(db))}catch(e){notify("Enregistrement impossible : stockage local indisponible.")}}
+    function dateAt(s){const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d,12)}
+    function iso(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
+    function mondayOf(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate(),12);x.setDate(x.getDate()-((x.getDay()+6)%7));return x}
+    function weekKey(d){return iso(mondayOf(d))}
+    function ensureWeek(key){if(!db.weeks[key])db.weeks[key]={start:key,days:Array.from({length:7},blankDay)};return db.weeks[key]}
+    function activeWeek(){return ensureWeek(activeKey)}
+    function weekNumber(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));t.setUTCDate(t.getUTCDate()+4-(t.getUTCDay()||7));const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil((((t-y)/86400000)+1)/7)}
+    function dateLabel(key){const s=dateAt(key),e=new Date(s);e.setDate(e.getDate()+6);const fmt=new Intl.DateTimeFormat("fr-FR",{day:"numeric",month:"long"});return `${fmt.format(s)} – ${fmt.format(e)} ${e.getFullYear()}`}
+    function duration(day){if(!day.start||!day.end)return 0;const a=toMinutes(day.start),b=toMinutes(day.end);if(a==null||b==null)return 0;const raw=b<a?b+1440-a:b-a;return Math.max(0,raw-Math.max(0,Number(day.break)||0))}
+    function toMinutes(v){if(!/^\d{1,2}:\d{2}$/.test(v||""))return null;const [h,m]=v.split(":").map(Number);return h<24&&m<60?h*60+m:null}
+    function fmt(min){const h=Math.floor(min/60),m=min%60;return `${h}h${String(m).padStart(2,"0")}`}
+    function fmtLong(min){const h=Math.floor(min/60),m=min%60;return `${h} h${m?` ${m} min`:""}`}
+    function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+    function toastMarkup(){return}
+    function notify(msg){const el=$("#toast");el.textContent=msg;el.classList.add("show");clearTimeout(notify.timer);notify.timer=setTimeout(()=>el.classList.remove("show"),2600)}
+    function render(){const w=activeWeek(),start=dateAt(activeKey);$("#weekTitle").textContent=`Semaine ${weekNumber(start)}, ${start.getFullYear()}`;$("#weekDates").textContent=dateLabel(activeKey);$("#thresholdInput").value=db.threshold;
+      const daysEl=$("#schedule");daysEl.innerHTML=`<div class="day-row header" role="row"><span>Jour</span><span>Début</span><span>Fin</span><span>Pause · min</span><span>Code</span><span>Durée</span><span></span></div>`+
+      w.days.map((day,i)=>{const d=new Date(start);d.setDate(d.getDate()+i);const work=duration(day)>0;return `<div class="day-row ${work?"work":""}" role="row" data-day="${i}"><div class="day-label"><span class="day-dot"></span><span><span class="day-name">${DAYS[i]}</span><span class="day-date">${new Intl.DateTimeFormat("fr-FR",{day:"numeric",month:"short"}).format(d)}</span></span></div><input class="field" type="time" aria-label="${DAYS[i]} heure de début" data-field="start" value="${escapeHtml(day.start)}"><input class="field" type="time" aria-label="${DAYS[i]} heure de fin" data-field="end" value="${escapeHtml(day.end)}"><input class="field break" type="number" min="0" max="600" step="5" aria-label="${DAYS[i]} pause en minutes" placeholder="0" data-field="break" value="${Number(day.break)||0}"><input class="field code-input" type="text" maxlength="16" aria-label="${DAYS[i]} code de poste" placeholder="Repos" data-field="code" value="${escapeHtml(day.code)}"><span class="duration ${work?"":"rest"}" aria-label="${work?fmtLong(duration(day)):"Repos"}">${work?fmt(duration(day)):"—"}</span><button class="clear-day" data-clear="${i}" title="Effacer ${DAYS[i]}" aria-label="Effacer les horaires de ${DAYS[i]}">×</button></div>`}).join("");
+      daysEl.querySelectorAll("input").forEach(input=>input.addEventListener("input",e=>{const row=e.target.closest("[data-day]"),i=Number(row.dataset.day),field=e.target.dataset.field;activeWeek().days[i][field]=field==="break"?Math.max(0,Number(e.target.value)||0):field==="code"?e.target.value.toUpperCase():e.target.value;render();const newEl=$(`[data-day="${i}"] [data-field="${field}"]`);if(newEl){newEl.focus();if(newEl.setSelectionRange&&field==="code")newEl.setSelectionRange(newEl.value.length,newEl.value.length)}saveDb()}));
+      daysEl.querySelectorAll("[data-clear]").forEach(b=>b.addEventListener("click",()=>{activeWeek().days[Number(b.dataset.clear)]=blankDay();saveDb();render()}));
+      const mins=w.days.reduce((s,d)=>s+duration(d),0),limit=Math.max(0,Number(db.threshold)||15)*60,workDays=w.days.filter(d=>duration(d)>0).length;
+      $("#weekTotal").innerHTML=`${Math.floor(mins/60)}<small>h</small>${String(mins%60).padStart(2,"0")}`;$("#compactTotal").textContent=fmt(mins);$("#dailyAverage").textContent=`Sur ${workDays} journée${workDays>1?"s":""} travaillée${workDays>1?"s":""}`;
+      const over=mins>limit,fill=$("#meterFill");fill.style.width=`${limit?Math.min(100,mins/limit*100):100}%`;fill.classList.toggle("over",over);
+      $("#thresholdRight").textContent=fmt(limit);$("#thresholdStatus").textContent=over?`${fmt(mins-limit)} au-dessus du seuil`:`${fmt(Math.max(0,limit-mins))} disponibles`;
+      const alert=$("#thresholdAlert");alert.classList.add("visible");alert.classList.toggle("success",!over);$("#thresholdHeading").textContent=over?"Seuil dépassé":"Rien à signaler";$("#alertCopy").textContent=over?`${fmtLong(mins-limit)} au-dessus du seuil configuré.`:mins===limit?"Vous êtes exactement au seuil configuré.":`${fmtLong(limit-mins)} avant d’atteindre le seuil.`;$("#thresholdIcon").innerHTML=over?'<path d="M12 3 2.8 19h18.4L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 9v4m0 3h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>':'<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="m8 12 2.6 2.6L16 9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>';
+      renderSaved();
     }
-    rows.push(row);
-    if(rows.length>=7) break;
-  }
-
-  // Compléter / aligner sur 7 jours
-  if(rows.length){
-    rows.forEach((r,i)=>{ r.dayIndex=i; r.day=DAY_LETTERS[i]||r.day; });
-    while(rows.length<7){
-      const i=rows.length;
-      rows.push({day:DAY_LETTERS[i], dayIndex:i, dateNum:'', start:'', end:'', pause:0, poste:'', repos:false});
-    }
-    // Déduire les dates manquantes depuis la période
-    if(startDate){
-      rows.forEach((r,i)=>{
-        const d=new Date(startDate); d.setDate(d.getDate()+i);
-        if(!r.dateNum || +r.dateNum!==d.getDate()) r.dateNum=String(d.getDate()).padStart(2,'0');
-        r.fullDate=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
-      });
-    }
-  }
-  return {label, range, rows};
-}
-
-function applyParsed(parsed){
-  const w=ensureWeek();
-  if(parsed.label) w.label=parsed.label;
-  if(parsed.range) w.range=parsed.range;
-  if(parsed.rows && parsed.rows.length){
-    w.rows=parsed.rows;
-  }
-  saveState();
-  renderAll();
-  const n=w.rows.filter(r=>!r.repos && (r.start||r.end)).length;
-  toast(n?('Planning détecté : '+n+' jour'+(n>1?'s':'')+' de travail. Vérifiez les horaires !'):'Planning importé — vérifiez et complétez les horaires.');
-  document.querySelector('main section:nth-of-type(2)').scrollIntoView({behavior:'smooth'});
-}
-
-/* =========================================================
-   RENDU
-   ========================================================= */
-const weekBody=document.getElementById('weekBody');
-
-function renderTable(){
-  const w=ensureWeek();
-  document.getElementById('weekLabel').value=w.label;
-  document.getElementById('weekRange').value=w.range;
-  document.getElementById('thresholdInput').value=state.threshold;
-  document.getElementById('weekBadge').textContent=w.label||'Semaine sans nom';
-
-  weekBody.innerHTML='';
-  w.rows.forEach((r,i)=>{
-    const mins=rowMinutes(r);
-    const tr=document.createElement('tr');
-    if(r.repos) tr.className='repos';
-    tr.innerHTML=
-      '<td><div class="day-name">'+DAY_NAMES[r.dayIndex!=null?r.dayIndex:i]+'</div>'+
-      '<div class="day-date">'+(r.fullDate?esc(r.fullDate):(r.dateNum?'le '+esc(r.dateNum):''))+'</div></td>'+
-      '<td>'+(r.repos?'—':'<input class="cell-input" data-i="'+i+'" data-f="start" value="'+esc(r.start)+'" placeholder="08:30" inputmode="numeric">')+'</td>'+
-      '<td>'+(r.repos?'—':'<input class="cell-input" data-i="'+i+'" data-f="end" value="'+esc(r.end)+'" placeholder="16:00" inputmode="numeric">')+'</td>'+
-      '<td>'+(r.repos?'—':'<input class="cell-input pause" data-i="'+i+'" data-f="pause" value="'+(+r.pause||0)+'" inputmode="numeric">')+'</td>'+
-      '<td>'+(r.repos?'—':'<input class="cell-input poste" data-i="'+i+'" data-f="poste" value="'+esc(r.poste)+'" placeholder="ZSCO">')+'</td>'+
-      '<td class="hours-cell">'+(r.repos?'':fmtMin(mins))+'</td>'+
-      '<td><button class="tag '+(r.repos?'repos':'work')+'" data-i="'+i+'" title="Cliquer pour basculer Repos / Travaillé">'+(r.repos?'Repos':'Travaillé')+'</button></td>'+
-      '<td><button class="row-del" data-i="'+i+'" title="Supprimer la ligne"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>';
-    weekBody.appendChild(tr);
-  });
-
-  weekBody.querySelectorAll('.cell-input').forEach(inp=>{
-    inp.addEventListener('input', e=>{
-      const wk=currentWeek(); if(!wk) return;
-      const i=+e.target.dataset.i, f=e.target.dataset.f;
-      wk.rows[i][f]= f==='pause' ? (parseInt(e.target.value)||0) : e.target.value;
-      saveState();
-      const tr=e.target.closest('tr');
-      const hc=tr.querySelector('.hours-cell');
-      if(hc) hc.textContent=fmtMin(rowMinutes(wk.rows[i]));
-      renderStats(); renderHistory();
-    });
-  });
-  weekBody.querySelectorAll('.tag').forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      const wk=currentWeek(); if(!wk) return;
-      const i=+e.target.dataset.i;
-      wk.rows[i].repos=!wk.rows[i].repos;
-      saveState(); renderAll();
-    });
-  });
-  weekBody.querySelectorAll('.row-del').forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      const wk=currentWeek(); if(!wk) return;
-      wk.rows.splice(+e.target.dataset.i,1);
-      saveState(); renderAll(); toast('Ligne supprimée');
-    });
-  });
-}
-
-function renderStats(){
-  const w=currentWeek();
-  const total=w?weekMinutes(w):0;
-  const thresholdMin=(+state.threshold||15)*60;
-  const worked=w?w.rows.filter(r=>!r.repos && rowMinutes(r)>0):[];
-  const daysWorked=worked.length;
-  const repos=w?w.rows.filter(r=>r.repos).length:0;
-  const avg=daysWorked?Math.round(total/daysWorked):0;
-  const max=worked.reduce((m,r)=>Math.max(m,rowMinutes(r)),0);
-  const maxRow=worked.find(r=>rowMinutes(r)===max);
-
-  const tp=fmtMinParts(total), ap=fmtMinParts(avg), mp=fmtMinParts(max);
-  document.getElementById('statTotalVal').innerHTML=tp.h+'<small>h'+tp.m+'</small>';
-  document.getElementById('statDays').textContent=daysWorked;
-  document.getElementById('statDaysSub').textContent=repos+' jour'+(repos>1?'s':'')+' de repos';
-  document.getElementById('statAvg').innerHTML=ap.h+'<small>h'+ap.m+'</small>';
-  document.getElementById('statMax').innerHTML=mp.h+'<small>h'+mp.m+'</small>';
-  document.getElementById('statMaxSub').textContent=maxRow?DAY_NAMES[maxRow.dayIndex??0]:'';
-
-  // Statut seuil
-  const banner=document.getElementById('statusBanner');
-  const statTotal=document.getElementById('statTotal');
-  const diff=total-thresholdMin;
-  statTotal.classList.remove('hl-ok','hl-danger');
-  if(total>thresholdMin){
-    banner.className='status-banner on danger';
-    statTotal.classList.add('hl-danger');
-    document.getElementById('statusIcon').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>';
-    document.getElementById('statusTitle').textContent='Dépassement du seuil de '+state.threshold+'h !';
-    document.getElementById('statusDetail').innerHTML='Vous avez <b>'+fmtMin(total)+'</b> cette semaine, soit <b>'+fmtMin(diff)+'</b> de plus que le seuil autorisé ('+state.threshold+'h00).';
-    document.getElementById('statTotalSub').textContent='+'+fmtMin(diff)+' au-dessus du seuil';
-  }else{
-    banner.className='status-banner on ok';
-    statTotal.classList.add('hl-ok');
-    document.getElementById('statusIcon').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
-    document.getElementById('statusTitle').textContent='Rien à signaler';
-    document.getElementById('statusDetail').innerHTML=total>0
-      ? 'Total de <b>'+fmtMin(total)+'</b> — il vous reste <b>'+fmtMin(thresholdMin-total)+'</b> avant le seuil de '+state.threshold+'h00.'
-      : 'Importez votre planning ou renseignez vos horaires pour lancer le comptage.';
-    document.getElementById('statTotalSub').textContent=total>0?('reste '+fmtMin(thresholdMin-total)+' dispo'):'';
-  }
-
-  // Barre de progression
-  const pct=thresholdMin?Math.min(100,total/thresholdMin*100):0;
-  const fill=document.getElementById('thresholdFill');
-  fill.style.width=pct+'%';
-  fill.className='t-fill'+(total>thresholdMin?' over':(pct>=80?' warn':''));
-  document.getElementById('thresholdLabel').textContent=fmtMin(total)+' / '+state.threshold+'h00';
-
-  // Barres par jour
-  const bars=document.getElementById('dayBars');
-  bars.innerHTML='';
-  if(w){
-    const maxDay=Math.max(60,...w.rows.map(rowMinutes));
-    w.rows.forEach((r,i)=>{
-      const mins=rowMinutes(r);
-      const d=document.createElement('div');
-      d.className='daybar'+(r.repos?' repos':'');
-      d.innerHTML='<div class="db-day">'+DAY_NAMES[r.dayIndex!=null?r.dayIndex:i]+'<span class="db-d">'+(r.fullDate||'')+'</span></div>'+
-        '<div class="db-track"><div class="db-fill" style="width:'+(mins/maxDay*100)+'%"></div></div>'+
-        '<div class="db-hours">'+(r.repos?'Repos':fmtMin(mins))+'</div>';
-      bars.appendChild(d);
-    });
-  }
-}
-
-function renderHistory(){
-  const list=document.getElementById('histList');
-  list.innerHTML='';
-  if(!state.weeks.length){
-    list.innerHTML='<div class="empty-state">Aucune semaine enregistrée pour le moment.<br>Importez une photo de planning pour commencer.</div>';
-    return;
-  }
-  state.weeks.forEach(w=>{
-    const total=weekMinutes(w);
-    const over=total>(+state.threshold||15)*60;
-    const item=document.createElement('div');
-    item.className='hist-item'+(w.id===state.currentId?' current':'');
-    item.innerHTML=
-      '<div><div class="h-title">'+esc(w.label||'Semaine sans nom')+(w.id===state.currentId?' ·':'')+'</div>'+
-      '<div class="h-meta">'+esc(w.range||'période non définie')+' · '+w.rows.filter(r=>!r.repos&&rowMinutes(r)>0).length+' j travaillés · '+(over?'<span style="color:var(--danger)">dépassement</span>':'OK')+'</div></div>'+
-      '<div class="h-hours '+(over?'over':'ok')+'">'+fmtMin(total)+'</div>'+
-      '<div class="h-actions">'+
-        '<button class="btn" data-load="'+w.id+'">Ouvrir</button>'+
-        '<button class="btn danger-ghost" data-del="'+w.id+'" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'+
-      '</div>';
-    list.appendChild(item);
-  });
-  list.querySelectorAll('[data-load]').forEach(b=>b.addEventListener('click',()=>{
-    state.currentId=b.dataset.load; saveState(); renderAll();
-    toast('Semaine chargée');
-    window.scrollTo({top:0,behavior:'smooth'});
-  }));
-  list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
-    if(!confirm('Supprimer définitivement cette semaine ?')) return;
-    state.weeks=state.weeks.filter(w=>w.id!==b.dataset.del);
-    if(state.currentId===b.dataset.del){
-      state.currentId=state.weeks.length?state.weeks[0].id:null;
-    }
-    saveState(); renderAll(); toast('Semaine supprimée');
-  }));
-}
-
-function renderAll(){
-  renderTable(); renderStats(); renderHistory();
-}
-
-/* =========================================================
-   ACTIONS
-   ========================================================= */
-document.getElementById('weekLabel').addEventListener('input', e=>{
-  const w=ensureWeek(); w.label=e.target.value; saveState();
-  document.getElementById('weekBadge').textContent=w.label||'Semaine sans nom';
-  renderHistory();
-});
-document.getElementById('weekRange').addEventListener('input', e=>{
-  const w=ensureWeek(); w.range=e.target.value; saveState(); renderHistory();
-});
-document.getElementById('thresholdInput').addEventListener('input', e=>{
-  state.threshold=Math.max(1,parseFloat(e.target.value)||15);
-  saveState(); renderStats(); renderHistory();
-});
-
-document.getElementById('btnAddRow').addEventListener('click', ()=>{
-  const w=ensureWeek();
-  w.rows.push({day:'+', dayIndex:w.rows.length%7, dateNum:'', start:'', end:'', pause:0, poste:'', repos:false});
-  saveState(); renderAll();
-});
-
-document.getElementById('btnClear').addEventListener('click', ()=>{
-  if(!confirm('Effacer toutes les lignes de la semaine en cours ?')) return;
-  const w=ensureWeek();
-  w.rows=DAY_LETTERS.map((l,i)=>({day:l, dayIndex:i, dateNum:'', start:'', end:'', pause:0, poste:'', repos:false}));
-  saveState(); renderAll(); toast('Semaine réinitialisée');
-});
-
-document.getElementById('btnPrint').addEventListener('click', ()=>window.print());
-
-document.getElementById('btnExportCsv').addEventListener('click', ()=>{
-  const w=currentWeek();
-  if(!w){ toast('Aucune semaine à exporter'); return; }
-  let csv='Jour;Date;Début;Fin;Pause (min);Poste;Heures;Statut\n';
-  w.rows.forEach((r,i)=>{
-    csv+=[DAY_NAMES[r.dayIndex!=null?r.dayIndex:i], r.fullDate||r.dateNum||'', r.repos?'':r.start, r.repos?'':r.end, r.repos?'':r.pause||0, r.repos?'':r.poste, r.repos?'':(rowMinutes(r)/60).toFixed(2).replace('.',','), r.repos?'Repos':'Travaillé'].join(';')+'\n';
-  });
-  csv+='TOTAL;;;;;;'+(weekMinutes(w)/60).toFixed(2).replace('.',',')+';\n';
-  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=(w.label||'semaine').replace(/[^\wÀ-ÿ -]+/g,'_')+'.csv';
-  a.click();
-  URL.revokeObjectURL(a.href);
-  toast('CSV exporté');
-});
-
-/* ---------- Init ---------- */
-renderAll();
-</script>
+    function renderSaved(){const keys=Object.keys(db.weeks).sort().reverse();$("#savedCount").textContent=`${keys.length} semaine${keys.length!==1?"s":""}`;$("#savedList").innerHTML=keys.length?keys.map(k=>{const total=db.weeks[k].days.reduce((s,d)=>s+duration(d),0);const d=dateAt(k);return `<div class="saved-item ${k===activeKey?"active":""}"><button class="saved-select" data-load="${k}"><strong>Semaine ${weekNumber(d)}, ${d.getFullYear()}</strong><span>${dateLabel(k)}</span></button><span class="saved-hours">${fmt(total)}</span></div>`}).join(""):`<div class="saved-empty">Vos semaines enregistrées apparaîtront ici.</div>`;$("#savedList").querySelectorAll("[data-load]").forEach(b=>b.addEventListener("click",()=>{activeKey=b.dataset.load;render()}))}
+    function saveActive(){saveDb();render();notify("Semaine enregistrée sur cet appareil.")}
+    function navigate(delta){const d=dateAt(activeKey);d.setDate(d.getDate()+delta*7);activeKey=iso(d);ensureWeek(activeKey);saveDb();render()}
+    $("#prevWeek").addEventListener("click",()=>navigate(-1));$("#nextWeek").addEventListener("click",()=>navigate(1));
+    $("#todayBtn").addEventListener("click",()=>{activeKey=weekKey(new Date());ensureWeek(activeKey);saveDb();render()});
+    $("#saveWeekBtn").addEventListener("click",saveActive);
+    $("#thresholdInput").addEventListener("change",e=>{db.threshold=Math.min(60,Math.max(1,Number(e.target.value)||15));saveDb();render()});
+    $("#newWeekBtn").addEventListener("click",()=>{const raw=prompt("Date du lundi de la semaine (AAAA-MM-JJ) :",activeKey);if(!raw)return;const d=dateAt(raw);if(Number.isNaN(d.getTime())){notify("Date invalide. Utilisez le format AAAA-MM-JJ.");return}activeKey=weekKey(d);ensureWeek(activeKey);saveDb();render()});
+    $("#deleteWeekBtn").addEventListener("click",()=>{if(!confirm(`Supprimer la semaine du ${dateLabel(activeKey)} ?`))return;delete db.weeks[activeKey];const remain=Object.keys(db.weeks).sort();activeKey=remain[remain.length-1]||DEFAULT_START;ensureWeek(activeKey);saveDb();render();notify("Semaine supprimée.")});
+    $("#backupBtn").addEventListener("click",()=>{saveDb();const blob=new Blob([JSON.stringify({app:"Planning Carrefour",version:1,exportedAt:new Date().toISOString(),...db},null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="planning-carrefour-sauvegarde.json";a.click();URL.revokeObjectURL(a.href);notify("Sauvegarde JSON téléchargée.")});
+    $("#restoreBtn").addEventListener("click",()=>$("#backupFile").click());
+    $("#backupFile").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text()),weeks=data.weeks;if(!weeks||typeof weeks!=="object")throw Error("format");for(const [key,w] of Object.entries(weeks)){if(!/^\d{4}-\d{2}-\d{2}$/.test(key)||!Array.isArray(w.days)||w.days.length!==7)throw Error("format")}if(!confirm("Remplacer vos semaines locales par cette sauvegarde ?"))return;db={threshold:Number(data.threshold)||15,weeks};activeKey=Object.keys(weeks).sort().reverse()[0]||DEFAULT_START;saveDb();render();notify("Sauvegarde restaurée.")}catch(err){notify("Fichier JSON invalide ou non compatible.")}finally{e.target.value=""}});
+    $("#printBtn").addEventListener("click",()=>window.print());
+    const dlg=$("#ocrDialog");
+    function openDialog(){dlg.showModal()}
+    $("#openOcrBtn").addEventListener("click",openDialog);$("#ocrAgainBtn").addEventListener("click",openDialog);
+    $("#closeOcr").addEventListener("click",()=>dlg.close());$("#cancelOcr").addEventListener("click",()=>dlg.close());
+    $("#imageFile").addEventListener("change",e=>{pendingImage=e.target.files[0]||null;if(pendingImage){$("#uploadLabel").textContent=pendingImage.name;$("#ocrStatus").firstChild.textContent="Image prête à lire.";$("#runOcrBtn").disabled=false;$("#ocrReview").classList.remove("visible");$("#applyOcrBtn").disabled=true}});
+    const upload=$("#imageFile"),uploadBox=$(".upload-box");uploadBox.addEventListener("dragover",e=>{e.preventDefault();uploadBox.style.borderColor="var(--green)"});uploadBox.addEventListener("dragleave",()=>uploadBox.style.borderColor="");uploadBox.addEventListener("drop",e=>{e.preventDefault();uploadBox.style.borderColor="";const f=e.dataTransfer.files[0];if(f&&f.type.startsWith("image/")){pendingImage=f;$("#uploadLabel").textContent=f.name;$("#ocrStatus").firstChild.textContent="Image prête à lire.";$("#runOcrBtn").disabled=false;$("#ocrReview").classList.remove("visible");$("#applyOcrBtn").disabled=true}});
+    async function getTesseract(){if(window.Tesseract)return window.Tesseract;await new Promise((resolve,reject)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";s.onload=resolve;s.onerror=()=>reject(Error("Impossible de charger Tesseract.js. Vérifiez votre connexion."));document.head.appendChild(s)});return window.Tesseract}
+    function parseTimeRanges(text){const normalized=text.replace(/[–—]/g,"-").replace(/[hH](?=\d)/g,":").replace(/(\d{1,2})[hH](?!\d)/g,"$1:00");const re=/\b([01]?\d|2[0-3])\s*[:.]\s*([0-5]\d)\s*(?:-|à|\/|→)\s*([01]?\d|2[0-3])\s*[:.]\s*([0-5]\d)\b/g;return [...normalized.matchAll(re)].map(m=>({start:`${m[1].padStart(2,"0")}:${m[2]}`,end:`${m[3].padStart(2,"0")}:${m[4]}`,raw:m[0]}))}
+    function startFromOcr(text){const range=text.match(/(?:du\s*)?(\d{1,2})\s*[./-]\s*(\d{1,2})\s*[./-]\s*(\d{4})\s*(?:au|à|[-–])\s*(\d{1,2})\s*[./-]\s*(\d{1,2})\s*[./-]\s*(\d{4})/i);if(range){const d=new Date(Number(range[3]),Number(range[2])-1,Number(range[1]),12);if(!Number.isNaN(d.getTime())&&d.getDate()===Number(range[1])&&d.getMonth()===Number(range[2])-1)return iso(mondayOf(d))}const week=text.match(/\bsemaine\s*(\d{1,2})\s*(?:de|du)?\s*(\d{4})\b/i);if(week){const year=Number(week[2]),n=Number(week[1]),jan4=new Date(year,0,4,12),monday=new Date(jan4);monday.setDate(jan4.getDate()-((jan4.getDay()+6)%7)+(n-1)*7);if(n>=1&&n<=53)return iso(monday)}return null}
+    function parseOcr(text){const lines=text.split(/\n+/).map(s=>s.trim()).filter(Boolean),out=Array.from({length:7},blankDay),start=startFromOcr(text),anchor=dateAt(start||activeKey),aliases=[["lundi","lun"],["mardi","mar"],["mercredi","mer"],["jeudi","jeu"],["vendredi","ven"],["samedi","sam"],["dimanche","dim"]];let found=0;lines.forEach(line=>{const times=parseTimeRanges(line);if(!times.length)return;const lower=line.toLowerCase();let ix=-1;aliases.forEach((list,i)=>{if(ix<0&&list.some(a=>new RegExp(`\\b${a}`,"i").test(lower)))ix=i});const short=line.match(/^\s*([LMJVSD])\s*0?(\d{1,2})\b/i);if(short){const dayNumber=Number(short[2]);for(let i=0;i<7;i++){const d=new Date(anchor);d.setDate(d.getDate()+i);if(d.getDate()===dayNumber){ix=i;break}}if(ix<0)ix=({L:0,M:1,J:3,V:4,S:5,D:6}[short[1].toUpperCase()]??-1)}if(ix<0)return;out[ix].start=times[0].start;out[ix].end=times[0].end;const rest=line.replace(times[0].raw,"").replace(/^\s*[LMJVSD]\s*0?\d{1,2}\s*/i,"").replace(/\b(?:lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)\b/ig,"");const codes=rest.match(/\b[A-Z][A-Z0-9]{2,10}\b/g);if(codes)out[ix].code=codes.find(c=>c!=="REPOS")||"";found++});if(found<1){const times=parseTimeRanges(text);times.slice(0,7).forEach((t,i)=>{out[i].start=t.start;out[i].end=t.end});found=times.length}return {days:out,found,start}}
+     $("#runOcrBtn").addEventListener("click",async()=>{if(!pendingImage)return;const btn=$("#runOcrBtn"),status=$("#ocrStatus"),progress=$("#ocrProgress");btn.disabled=true;status.firstChild.textContent="Chargement du moteur OCR…";progress.style.width="3%";try{const T=await getTesseract();status.firstChild.textContent="Lecture de l’image…";const result=await T.recognize(pendingImage,"fra",{logger:m=>{if(m.status==="recognizing text")progress.style.width=`${Math.round(m.progress*100)}%`;else if(m.status==="loading language traineddata")status.firstChild.textContent="Chargement du français…"}});recognizedText=result.data.text||"";const parsed=parseOcr(recognizedText);$("#ocrWeekStart").value=parsed.start||activeKey;renderOcrReview(parsed.days);$("#ocrText").textContent=`Texte détecté : ${recognizedText.slice(0,700)}${recognizedText.length>700?"…":""}`;status.firstChild.textContent=`Lecture terminée · ${parsed.found} ligne${parsed.found!==1?"s":""} avec horaires proposées. Vérifiez tout avant application.`;$("#ocrReview").classList.add("visible");$("#applyOcrBtn").disabled=false;if(!parsed.found)notify("Aucun horaire détecté avec certitude. Saisissez-les dans les champs de vérification.")}catch(err){status.firstChild.textContent=`Lecture impossible : ${err.message||"erreur inconnue"}`;notify("La lecture OCR n’a pas abouti.")}finally{btn.disabled=false}});
+    function renderOcrReview(days){$("#ocrGrid").innerHTML=days.map((d,i)=>`<div class="ocr-day" data-ocr-day="${i}"><div class="ocr-day-top">${DAYS[i]}</div><div class="ocr-fields"><label>Début<input type="time" data-ocr="start" aria-label="${DAYS[i]} début détecté" value="${escapeHtml(d.start)}"></label><label>Fin<input type="time" data-ocr="end" aria-label="${DAYS[i]} fin détectée" value="${escapeHtml(d.end)}"></label><label>Pause min<input type="number" min="0" step="5" data-ocr="break" aria-label="${DAYS[i]} pause en minutes" value="${Number(d.break)||0}"></label><label>Code<input type="text" maxlength="16" data-ocr="code" aria-label="${DAYS[i]} code détecté" value="${escapeHtml(d.code)}"></label></div></div>`).join("")}
+     $("#applyOcrBtn").addEventListener("click",()=>{const selected=$("#ocrWeekStart").value;if(!selected){notify("Choisissez le lundi de la semaine avant d’appliquer.");return}activeKey=weekKey(dateAt(selected));activeWeek().days=Array.from({length:7},blankDay);document.querySelectorAll("[data-ocr-day]").forEach(row=>{const i=Number(row.dataset.ocrDay),get=k=>row.querySelector(`[data-ocr="${k}"]`).value;activeWeek().days[i]={start:get("start"),end:get("end"),break:Number(get("break"))||0,code:get("code").toUpperCase()}});saveDb();render();dlg.close();notify("Proposition appliquée. Vérifiez les horaires dans le planning.");});
+    render();
+  })();
+  </script>
 </body>
 </html>

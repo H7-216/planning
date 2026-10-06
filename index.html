@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f3f5ef">
   <meta name="description" content="Votre planning hebdomadaire Carrefour, privé et enregistré sur cet appareil.">
-  <link rel="icon" type="image/PNG" href="Planning.PNG">
-    <link rel="apple-touch-icon" href="Planning.PNG">
   <title>Planning Carrefour — Mon espace</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%2321634e'/%3E%3Cpath d='M32 14v36M14 32h36' stroke='white' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E">
   <style>
@@ -34,6 +32,8 @@
     .eyebrow{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--green);font-weight:800;margin-bottom:9px}
     h1{font:400 clamp(32px,4vw,47px)/1.04 var(--serif);letter-spacing:-.045em;margin:0}
     .intro p{color:var(--muted);margin:10px 0 0;font-size:13px}
+    .intro-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+    .intro-actions .button{min-height:42px}
     .privacy-note{display:flex;align-items:center;gap:8px;color:#557064;font-size:11px;padding:9px 12px;background:#e8eee7;border-radius:9px;white-space:nowrap}
     .privacy-note svg{width:14px;height:14px}
     .week-bar{background:var(--green);color:#fffefa;border-radius:15px;padding:20px 22px;display:flex;align-items:center;justify-content:space-between;gap:18px;box-shadow:var(--shadow);margin-bottom:18px}
@@ -44,6 +44,7 @@
     .week-title{font:400 22px/1.1 var(--serif);letter-spacing:-.025em}
     .week-dates{font-size:11px;color:#c9ded1;margin-top:4px}
     .week-actions{display:flex;gap:8px;align-items:center}
+    .week-actions{flex-wrap:wrap}
     .week-actions .button{background:rgba(255,255,255,.11);color:#fff;border-color:rgba(255,255,255,.24)}
     .week-actions .button:hover{background:rgba(255,255,255,.2)}
     .week-actions .button-primary{background:var(--lime);border-color:var(--lime);color:#26352a}
@@ -56,9 +57,17 @@
     .panel-head p{margin:5px 0 0;color:var(--muted);font-size:11px}
     .week-sum-mini{font-size:10px;text-align:right;color:var(--muted)}
     .week-sum-mini strong{display:block;color:var(--green);font-size:16px;letter-spacing:-.02em}
+    .week-sum-mini strong.near{color:#a86618}
+    .week-sum-mini strong.over{color:#b4442e}
     .schedule{padding:0 12px 12px}
     .day-row{display:grid;grid-template-columns:minmax(116px,1.05fr) minmax(96px,.82fr) minmax(96px,.82fr) minmax(92px,.78fr) minmax(108px,1fr) 92px 34px;gap:10px;align-items:center;padding:11px 8px;border-top:1px solid #edf0e9;min-height:63px}
     .day-row.extra-slot-row{min-height:52px;background:#fbfcf8}
+    .day-row.info-row{min-height:34px;padding:6px 8px;background:#f8faf6}
+    .day-row.info-row .row-note{grid-column:1/-1;font-size:10px;color:#69766d}
+    .day-row.cut-row{background:#f5f6f1}
+    .day-row.pause-row{background:#f2f7ec}
+    .day-row.warning-row{background:#fff6e9}
+    .day-row.warning-row .row-note{color:#875528;font-weight:650}
     .day-row.header{min-height:30px;border:0;padding-top:4px;padding-bottom:4px;color:#89948c;text-transform:uppercase;letter-spacing:.09em;font-size:9px;font-weight:750}
     .day-name{font-weight:700;font-size:12px}
     .day-date{display:block;font-size:10px;color:var(--muted);margin-top:2px}
@@ -70,12 +79,16 @@
     .add-slot:hover{text-decoration:underline}
     .day-dot{width:7px;height:7px;border-radius:50%;background:#d6ded7;flex:none}
     .day-row.work .day-dot{background:var(--green)}
+    .day-row.warning-day{border-left:3px solid #d88b31}
     .field{width:100%;height:34px;border:1px solid #dce4dc;border-radius:7px;background:#fffefa;color:var(--ink);padding:0 8px;font-size:12px;min-width:0}
     .field:focus{outline:2px solid #9ec9a7;outline-offset:1px;border-color:transparent}
     .field::placeholder{color:#a2aaa4}
     .code-input{text-transform:uppercase;font-size:11px;font-weight:700;letter-spacing:.03em}
     .duration{font-weight:750;color:var(--green);font-size:12px;font-variant-numeric:tabular-nums}
     .duration.rest{color:#9aa49c;font-weight:550}
+    .duration.near,.summary-value.near{color:#a86618}
+    .duration.over,.summary-value.over{color:#b4442e}
+    .summary-value.good{color:var(--green)}
     .clear-day{width:28px;height:28px;border:0;background:transparent;color:#9aa49c;border-radius:6px;font-size:18px;line-height:1}
     .clear-day:hover{background:var(--orange-pale);color:var(--orange)}
     .remove-slot{width:28px;height:28px;border:0;background:transparent;color:#9aa49c;border-radius:6px;font-size:17px;line-height:1}
@@ -97,9 +110,11 @@
     .threshold-input{width:52px;border:1px solid var(--line);background:transparent;border-radius:6px;padding:4px 6px;text-align:right;font-size:12px;font-weight:700;color:var(--ink)}
     .meter{height:8px;background:#edf0e8;border-radius:10px;margin:11px 0 9px;overflow:hidden}
     .meter-fill{height:100%;width:0;background:#91b578;border-radius:inherit;transition:width .25s}
-    .meter-fill.over{background:var(--orange)}
+    .meter-fill.over{background:#c44536}
+    .meter-fill.near{background:#d88b31}
     .alert{display:none;align-items:flex-start;gap:9px;background:var(--orange-pale);color:#803e2d;padding:11px 12px;border-radius:9px;font-size:11px;line-height:1.4;margin-top:13px}
     .alert.success{background:#e8f2e6;color:#2d6145}
+    .alert.near{background:#fff2d9;color:#84551f}
     .alert.visible{display:flex}
     .alert svg{width:15px;height:15px;flex:none;margin-top:1px}
     .alert strong{display:block;margin-bottom:2px}
@@ -114,6 +129,12 @@
     .saved-select strong{font-size:11px;display:block}
     .saved-select span{font-size:10px;color:var(--muted);display:block;margin-top:2px}
     .saved-hours{font-size:11px;font-weight:750;white-space:nowrap;color:var(--green)}
+    .saved-hours.near{color:#a86618}
+    .saved-hours.over{color:#b4442e}
+    .saved-item-actions{display:flex;align-items:center;gap:3px}
+    .saved-action{width:27px;height:28px;border:0;border-radius:6px;background:transparent;color:#64736a;font-size:15px}
+    .saved-action:hover{background:#e8eee7}
+    .saved-action.delete:hover{background:var(--orange-pale);color:var(--orange)}
     .saved-empty{text-align:center;padding:16px 8px;color:var(--muted);font-size:11px;background:#f7f8f3;border-radius:8px}
     .saved-tools{display:flex;gap:6px;border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
     .saved-tools .button{padding:7px 9px;flex:1;font-size:10px}
@@ -160,13 +181,20 @@
     .ocr-no-shifts{margin:2px 0;color:#8a948d;font-size:10px}
     .ocr-source{font-size:10px;color:var(--muted);margin:12px 0}
     .dialog-foot{padding:12px 21px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+    .help-content{padding:20px 22px;display:grid;gap:14px}
+    .help-content h3{font-size:12px;margin:0 0 5px;color:var(--green)}
+    .help-content p,.help-content li{font-size:11px;color:var(--muted);margin:0;line-height:1.55}
+    .help-content ul{padding-left:17px;margin:4px 0 0}
+    .help-content section{padding-bottom:12px;border-bottom:1px solid var(--line)}
+    .reset-message{padding:20px 22px;color:var(--muted);font-size:13px;line-height:1.55}
     .hidden{display:none!important}
     .print-only{display:none}
     @media(max-width:1000px){.content-grid{grid-template-columns:minmax(0,1fr) 285px}.day-row{grid-template-columns:minmax(94px,1fr) 82px 82px 76px 92px 65px 27px;gap:7px}.field{padding:0 6px}}
-    @media(max-width:760px){.shell{padding:15px 16px 32px}.topbar{margin-bottom:25px}.top-actions .button span{display:none}.top-actions .button{width:37px;height:37px;padding:0}.intro{grid-template-columns:1fr;align-items:start;gap:12px}.privacy-note{justify-self:start}.week-bar{align-items:flex-start;flex-direction:column;padding:17px}.week-actions{width:100%}.week-actions .button{flex:1}.content-grid{grid-template-columns:1fr}.side-stack{grid-template-columns:repeat(2,minmax(0,1fr))}.summary-panel{grid-row:span 2}.schedule-panel{overflow:visible}.schedule{padding:0 11px 9px}.day-row{grid-template-columns:minmax(80px,1fr) 1fr 1fr;gap:7px;padding:10px 5px;position:relative}.day-row.header{display:none}.day-row .field{height:33px}.day-row .field.break{grid-column:2}.day-row .field.code-input{grid-column:3}.day-row .duration{grid-column:2;grid-row:2}.day-row .clear-day,.day-row .remove-slot{position:absolute;right:4px;top:7px}.day-label{grid-column:1;grid-row:1 / span 2;align-self:center;align-items:flex-start}.day-date{display:block}.schedule-foot{padding:10px 14px 14px}}
+    @media(max-width:760px){.shell{padding:15px 16px 32px}.topbar{margin-bottom:25px}.top-actions{gap:5px}.top-actions .button span{display:none}.top-actions .button{width:34px;height:36px;padding:0}.intro{grid-template-columns:1fr;align-items:start;gap:12px}.privacy-note{justify-self:start;white-space:normal}.intro-actions .button{flex:1 1 140px}.week-bar{align-items:flex-start;flex-direction:column;padding:17px}.week-actions{width:100%;gap:6px}.week-actions .button{flex:1 1 130px}.content-grid{grid-template-columns:1fr}.side-stack{grid-template-columns:repeat(2,minmax(0,1fr))}.summary-panel{grid-row:span 2}.schedule-panel{overflow:visible}.schedule{padding:0 11px 9px}.day-row{grid-template-columns:minmax(80px,1fr) 1fr 1fr;gap:7px;padding:10px 5px;position:relative}.day-row.header{display:none}.day-row .field{height:36px}.day-row .field.break{grid-column:2}.day-row .field.code-input{grid-column:3}.day-row .duration{grid-column:2;grid-row:2}.day-row .clear-day,.day-row .remove-slot{position:absolute;right:4px;top:7px}.day-label{grid-column:1;grid-row:1 / span 2;align-self:center;align-items:flex-start}.day-date{display:block}.day-row.info-row{min-height:32px;padding:6px}.day-row.info-row .row-note{font-size:9px;line-height:1.4}.schedule-foot{padding:10px 14px 14px}.saved-item{gap:4px;padding:8px 5px}.saved-action{width:25px}.saved-hours{font-size:10px}}
     @media(max-width:760px){.extra-slot-label{grid-column:1;grid-row:1 / span 2;align-self:center}.extra-slot-row .slot-spacer{display:none}.extra-slot-row .slot-detail{grid-column:2;grid-row:2}.extra-slot-row .code-input{grid-column:3;grid-row:2}.add-slot{font-size:8px;white-space:nowrap}}
-    @media(max-width:480px){.shell{padding:12px 11px 26px}.brand{font-size:14px}.week-nav{gap:9px}.week-title{font-size:20px}.week-actions{gap:6px}.week-actions .button{font-size:10px;padding:8px 6px}.side-stack{grid-template-columns:1fr}.summary-panel{grid-row:auto}.saved-list{max-height:180px}.ocr-grid{grid-template-columns:1fr}.dialog-head,.dialog-body{padding-left:15px;padding-right:15px}.dialog-foot{padding-left:15px;padding-right:15px}}
-    @media print{body{background:#fff}.shell{max-width:none;padding:0}.topbar,.week-actions,.side-stack,.clear-day,.add-slot,.remove-slot,.top-actions,.schedule-foot{display:none!important}.intro{margin-bottom:18px}.privacy-note{display:none}.week-bar{background:#fff;color:var(--ink);box-shadow:none;border:1px solid #bbb;margin-bottom:12px;padding:12px 15px}.week-dates{color:#555}.week-nav button{display:none}.content-grid{display:block}.panel{box-shadow:none;border-color:#aaa}.schedule-panel{border-radius:0}.panel-head{padding:12px 14px}.day-row{border-color:#ddd;min-height:48px}.field{border:0;background:transparent;padding:0;height:auto!important;appearance:none;color:var(--ink)}.day-row .field::placeholder{color:transparent}.schedule-foot{display:block!important}.print-only{display:block}}
+    @media(max-width:760px){.day-row:not(.header):not(.info-row)::before,.day-row:not(.header):not(.info-row)::after{position:absolute;top:1px;font-size:8px;line-height:1;color:#89948c;pointer-events:none}.day-row:not(.header):not(.info-row)::before{content:"Début";left:35%}.day-row:not(.header):not(.info-row)::after{content:"Fin";left:67%}}
+    @media(max-width:480px){.shell{padding:12px 11px 26px}.brand{font-size:13px;gap:8px}.brand span small{font-size:10px}.week-nav{gap:9px}.week-title{font-size:20px}.week-actions{gap:6px}.week-actions .button{font-size:10px;padding:8px 6px;min-height:40px}.side-stack{grid-template-columns:1fr}.summary-panel{grid-row:auto}.saved-list{max-height:240px}.saved-select strong{font-size:10px}.saved-select span{font-size:9px}.saved-item-actions{gap:1px}.ocr-grid{grid-template-columns:1fr}.dialog-head,.dialog-body{padding-left:15px;padding-right:15px}.dialog-foot{padding-left:15px;padding-right:15px}.help-content{padding:16px}.intro-actions .button{flex:1 1 100%}}
+    @media print{body{background:#fff}.shell{max-width:none;padding:0}.topbar,.week-actions,.side-stack,.clear-day,.add-slot,.remove-slot,.top-actions,.schedule-foot,.intro-actions{display:none!important}.intro{margin-bottom:18px}.privacy-note{display:none}.week-bar{background:#fff;color:var(--ink);box-shadow:none;border:1px solid #bbb;margin-bottom:12px;padding:12px 15px}.week-dates{color:#555}.week-nav button{display:none}.content-grid{display:block}.panel{box-shadow:none;border-color:#aaa}.schedule-panel{border-radius:0}.panel-head{padding:12px 14px}.day-row{border-color:#ddd;min-height:48px}.field{border:0;background:transparent;padding:0;height:auto!important;appearance:none;color:var(--ink)}.day-row .field::placeholder{color:transparent}.schedule-foot{display:block!important}.print-only{display:block}}
   </style>
 </head>
 <body>
@@ -180,14 +208,20 @@
         <button class="button button-quiet" id="backupBtn" title="Exporter une sauvegarde JSON"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sauvegarder</span></button>
         <button class="button button-quiet" id="restoreBtn" title="Importer une sauvegarde JSON"><svg viewBox="0 0 24 24" fill="none"><path d="M12 15V3m0 0L8 7m4-4 4 4M5 15v5h14v-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Restaurer</span></button>
         <button class="button button-quiet" id="printBtn" title="Imprimer le planning"><svg viewBox="0 0 24 24" fill="none"><path d="M7 8V4h10v4M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2m-10-3h10v6H7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span>Imprimer</span></button>
+        <button class="button button-quiet" id="helpBtn" title="Comment ça marche ?" aria-label="Ouvrir l’aide"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M9.7 9a2.4 2.4 0 1 1 4.3 1.5c-.9 1-2 1.2-2 2.7m0 3h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>Aide</span></button>
       </div>
     </header>
 
     <section class="intro">
       <div>
         <div class="eyebrow">Votre semaine, en clair</div>
-        <h1>Le planning de la semaine.</h1>
-        <p>Vérifiez vos horaires, corrigez-les et gardez le compte juste.</p>
+        <h1>Mon Planning</h1>
+        <p>Consultez, vérifiez et calculez vos heures facilement.</p>
+        <div class="intro-actions" aria-label="Actions principales">
+          <button class="button button-primary" id="heroNewWeekBtn" type="button">＋ Nouveau planning</button>
+          <button class="button" id="heroOpenBtn" type="button">Ouvrir un planning</button>
+          <button class="button" id="heroImportBtn" type="button">Importer une photo</button>
+        </div>
       </div>
       <div class="privacy-note"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3 5 6v5c0 4.7 2.9 8.1 7 10 4.1-1.9 7-5.3 7-10V6l-7-3Z" stroke="currentColor" stroke-width="1.6"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Privé sur cet appareil · aucune création de compte</div>
     </section>
@@ -200,6 +234,7 @@
       </div>
       <div class="week-actions">
         <button class="button" id="todayBtn">Aller à cette semaine</button>
+        <button class="button" id="duplicatePrevBtn" title="Copier les horaires de la semaine précédente dans celle-ci">Dupliquer la précédente</button>
         <button class="button button-primary" id="saveWeekBtn"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4h12l3 3v13H4V4h1Zm2 0v6h10V4M8 20v-7h8v7" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Enregistrer la semaine</button>
       </div>
     </section>
@@ -207,11 +242,11 @@
     <div class="content-grid">
       <section class="panel schedule-panel" aria-labelledby="scheduleTitle">
         <div class="panel-head">
-          <div><h2 id="scheduleTitle">Mes horaires</h2><p>Modifiez chaque plage, la pause ou le code directement dans le tableau.</p></div>
+          <div><h2 id="scheduleTitle">Mes horaires</h2><p>Modifiez chaque plage, la pause saisie en plus ou le code directement dans le tableau.</p></div>
           <div class="week-sum-mini">Total semaine<strong id="compactTotal">15h15</strong></div>
         </div>
         <div class="schedule" id="schedule" role="table" aria-label="Horaires de la semaine"></div>
-        <div class="schedule-foot">Durée de la journée = somme des plages − pause supplémentaire saisie. Les périodes sans travail entre deux plages ne sont pas comptées.</div>
+        <div class="schedule-foot">Le total déduit les pauses automatiques : 3–&lt;4 h = 9 min, 4–&lt;6 h = 15 min, 6–&lt;7 h = 20 min, dès 7 h = 30 min. Les coupures entre plages restent séparées et ne comptent pas comme travail.</div>
       </section>
 
       <aside class="side-stack" aria-label="Résumé et outils">
@@ -228,11 +263,12 @@
           </div>
         </section>
 
-        <section class="panel saved-panel">
-          <div class="side-title"><h3>Semaines gardées</h3><span class="count-pill" id="savedCount">1 semaine</span></div>
+        <section class="panel saved-panel" id="savedPanel">
+          <div class="side-title"><h3>Mes plannings</h3><span class="count-pill" id="savedCount">1 semaine</span></div>
           <div class="saved-list" id="savedList"></div>
           <div class="saved-tools">
             <button class="button" id="newWeekBtn">+ Nouvelle semaine</button>
+            <button class="button" id="resetWeekBtn" title="Effacer les horaires de cette semaine">Réinitialiser</button>
             <button class="button button-danger" id="deleteWeekBtn" title="Supprimer la semaine active">Supprimer</button>
           </div>
         </section>
@@ -264,6 +300,24 @@
     <div class="dialog-foot"><button class="button" id="cancelOcr">Annuler</button><button class="button button-primary" id="applyOcrBtn" disabled>Appliquer à cette semaine</button></div>
   </dialog>
 
+  <dialog id="helpDialog" aria-labelledby="helpTitle">
+    <div class="dialog-head"><div><h2 id="helpTitle">Comment ça marche ?</h2><p>Les commandes utiles pour gérer votre planning.</p></div><button class="dialog-close" id="closeHelp" aria-label="Fermer l’aide">×</button></div>
+    <div class="help-content">
+      <section><h3>Saisir et modifier les horaires</h3><p>Choisissez une heure de début et de fin dans la ligne du jour. Pour plusieurs tâches ou plusieurs périodes, utilisez « + créneau »; indiquez un code pour chaque plage. Les modifications sont enregistrées dans ce navigateur.</p></section>
+      <section><h3>Pauses et coupures</h3><p>Les pauses automatiques sont déduites par période de travail continue : 3 à moins de 4 h = 9 min; 4 à moins de 6 h = 15 min; 6 à moins de 7 h = 20 min; dès 7 h = 30 min. Toute coupure entre des plages est affichée séparément et n’est pas comptée comme du travail. La pause saisie en plus s’ajoute à ces déductions.</p></section>
+      <section><h3>Changer de semaine et sauvegarder</h3><p>Utilisez les flèches pour changer de semaine, « Nouvelle semaine » pour en créer une, ou « Dupliquer la précédente » pour copier les horaires de la semaine antérieure. Ouvrez une semaine depuis « Mes plannings ». Les changements sont sauvegardés automatiquement; le bouton d’enregistrement confirme l’action.</p></section>
+      <section><h3>Importer une photo et imprimer</h3><p>Choisissez « Importer une photo », lancez la lecture puis vérifiez chaque plage avant de l’appliquer. La photo reste dans votre navigateur; le moteur OCR français nécessite une connexion internet au premier lancement. « Imprimer » ouvre la version imprimable du planning.</p></section>
+      <section><h3>Seuil et couleurs</h3><p>Le seuil est réglable dans le résumé. Vert : moins de 90 % du seuil; orange : de 90 % au seuil inclus; rouge : dépassement. « Rien à signaler » apparaît sous le seuil.</p></section>
+    </div>
+    <div class="dialog-foot"><button class="button button-primary" id="doneHelp">Fermer</button></div>
+  </dialog>
+
+  <dialog id="resetDialog" aria-labelledby="resetTitle">
+    <div class="dialog-head"><div><h2 id="resetTitle">Réinitialiser le planning ?</h2><p>Cette action vide les horaires de la semaine active.</p></div><button class="dialog-close" id="closeReset" aria-label="Fermer">×</button></div>
+    <div class="reset-message">Voulez-vous vraiment effacer toutes les plages, pauses et codes de cette semaine ? Les autres semaines ne seront pas modifiées.</div>
+    <div class="dialog-foot"><button class="button" id="cancelReset">Annuler</button><button class="button button-danger" id="confirmReset">Effacer</button></div>
+  </dialog>
+
   <script>
   (() => {
     "use strict";
@@ -281,7 +335,7 @@
     function loadDb(){try{const parsed=JSON.parse(localStorage.getItem(STORAGE_KEY));if(parsed&&parsed.weeks){parsed.weeks=Object.fromEntries(Object.entries(parsed.weeks).map(([key,week])=>[key,{...week,days:week.days.map(normalizeDay)}]));return parsed}}catch(e){}return {threshold:15,weeks:{[DEFAULT_START]:demoWeek()}}}
     db=loadDb();
     if(!db.weeks[DEFAULT_START])db.weeks[DEFAULT_START]=demoWeek();
-    function saveDb(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(db))}catch(e){notify("Enregistrement impossible : stockage local indisponible.")}}
+    function saveDb(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(db));return true}catch(e){notify("Enregistrement impossible : stockage local indisponible.");return false}}
     function dateAt(s){const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d,12)}
     function iso(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
     function mondayOf(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate(),12);x.setDate(x.getDate()-((x.getDay()+6)%7));return x}
@@ -291,44 +345,126 @@
     function weekNumber(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));t.setUTCDate(t.getUTCDate()+4-(t.getUTCDay()||7));const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil((((t-y)/86400000)+1)/7)}
     function dateLabel(key){const s=dateAt(key),e=new Date(s);e.setDate(e.getDate()+6);const fmt=new Intl.DateTimeFormat("fr-FR",{day:"numeric",month:"long"});return `${fmt.format(s)} – ${fmt.format(e)} ${e.getFullYear()}`}
     function slotDuration(slot){if(!slot.start||!slot.end)return 0;const a=toMinutes(slot.start),b=toMinutes(slot.end);if(a==null||b==null)return 0;return b<a?b+1440-a:b-a}
-    function duration(day){const total=daySlots(day).reduce((sum,slot)=>sum+slotDuration(slot),0);return Math.max(0,total-Math.max(0,Number(day.break)||0))}
+    function automaticPause(minutes){if(minutes>=420)return 30;if(minutes>=360)return 20;if(minutes>=240)return 15;if(minutes>=180)return 9;return 0}
+    function clockAt(minutes){const value=((minutes%1440)+1440)%1440;return `${String(Math.floor(value/60)).padStart(2,"0")}:${String(value%60).padStart(2,"0")}`}
+    function dayInfo(day){
+      const source=daySlots(day),warnings=[],entries=source.map((slot,index)=>({slot,index,start:toMinutes(slot.start),end:toMinutes(slot.end)}));
+      entries.forEach(entry=>{
+        const hasStart=!!entry.slot.start,hasEnd=!!entry.slot.end;
+        if(hasStart!==hasEnd)warnings.push(`Créneau ${entry.index+1} incomplet : indiquez le début et la fin.`);
+        else if(hasStart&&(entry.start==null||entry.end==null))warnings.push(`Créneau ${entry.index+1} : vérifiez le format de l’heure.`);
+        else if(hasStart&&entry.end<entry.start)warnings.push(`Créneau ${entry.index+1} : la fin est avant le début; il est compté jusqu’au lendemain.`);
+      });
+      const hasOvernight=entries.some(entry=>entry.start!=null&&entry.end!=null&&entry.end<entry.start);
+      const ordered=entries.slice().sort((a,b)=>{
+        const av=a.start==null?Infinity:a.start,bv=b.start==null?Infinity:b.start;
+        return hasOvernight?a.index-b.index:av-bv||a.index-b.index;
+      });
+      const intervals=ordered.filter(entry=>entry.start!=null&&entry.end!=null),periods=[],cuts=[];
+      let grossMinutes=0,overlap=false,current=null,offset=0,previousStart=null;
+      for(const entry of intervals){
+        if(previousStart!=null&&entry.start<previousStart)offset+=1440;
+        const start=entry.start+offset,end=entry.end+offset+(entry.end<entry.start?1440:0),minutes=end-start;
+        grossMinutes+=minutes;
+        if(!current){
+          current={start,end,minutes,slotIndexes:[entry.index]};
+        }else{
+          const gap=start-current.end;
+          if(gap===0){
+            current.end=end;current.minutes+=minutes;current.slotIndexes.push(entry.index);
+          }else{
+            periods.push(current);
+            if(gap>0)cuts.push({afterPeriod:periods.length-1,start:current.end,end:start,minutes:gap});
+            else overlap=true;
+            current={start,end,minutes,slotIndexes:[entry.index]};
+          }
+        }
+        previousStart=entry.start;
+      }
+      if(current)periods.push(current);
+      if(overlap)warnings.push("Des plages se chevauchent : vérifiez leurs horaires.");
+      if(grossMinutes>720)warnings.push("Cette journée dépasse 12 heures travaillées. Vérifiez la saisie.");
+      const automaticBreak=periods.reduce((sum,period)=>sum+automaticPause(period.minutes),0),manualBreak=Math.max(0,Number(day.break)||0);
+      return {ordered,grossMinutes,automaticBreak,manualBreak,netMinutes:Math.max(0,grossMinutes-automaticBreak-manualBreak),periods,cuts,warnings};
+    }
+    function duration(day){return dayInfo(day).netMinutes}
     function toMinutes(v){if(!/^\d{1,2}:\d{2}$/.test(v||""))return null;const [h,m]=v.split(":").map(Number);return h<24&&m<60?h*60+m:null}
     function fmt(min){const h=Math.floor(min/60),m=min%60;return `${h}h${String(m).padStart(2,"0")}`}
     function fmtLong(min){const h=Math.floor(min/60),m=min%60;return `${h} h${m?` ${m} min`:""}`}
     function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
     function toastMarkup(){return}
     function notify(msg){const el=$("#toast");el.textContent=msg;el.classList.add("show");clearTimeout(notify.timer);notify.timer=setTimeout(()=>el.classList.remove("show"),2600)}
-    function renderDayRows(day,i,start){const d=new Date(start);d.setDate(d.getDate()+i);const slots=daySlots(day),first=slots[0]||blankSlot(),work=duration(day)>0;let rows=`<div class="day-row ${work?"work":""}" role="row" data-day="${i}" data-slot-index="0"><div class="day-label"><span class="day-dot"></span><span><span class="day-name">${DAYS[i]}</span><span class="day-date">${new Intl.DateTimeFormat("fr-FR",{day:"numeric",month:"short"}).format(d)}</span><button class="add-slot" type="button" data-add-slot="${i}" aria-label="Ajouter une plage horaire le ${DAYS[i]}">+ créneau</button></span></div><input class="field" type="time" aria-label="${DAYS[i]} heure de début" data-field="start" value="${escapeHtml(first.start)}"><input class="field" type="time" aria-label="${DAYS[i]} heure de fin" data-field="end" value="${escapeHtml(first.end)}"><input class="field break" type="number" min="0" max="600" step="5" aria-label="${DAYS[i]} pause supplémentaire en minutes" placeholder="0" data-field="break" value="${Number(day.break)||0}"><input class="field code-input" type="text" maxlength="16" aria-label="${DAYS[i]} code de tâche" placeholder="Repos" data-field="code" value="${escapeHtml(first.code)}"><span class="duration ${work?"":"rest"}" aria-label="${work?fmtLong(duration(day)):"Repos"}">${work?fmt(duration(day)):"—"}</span><button class="clear-day" data-clear="${i}" title="Effacer ${DAYS[i]}" aria-label="Effacer les horaires de ${DAYS[i]}">×</button></div>`;rows+=slots.slice(1).map((slot,j)=>`<div class="day-row extra-slot-row" role="row" data-day="${i}" data-slot-index="${j+1}"><div class="extra-slot-label">Créneau ${j+2}</div><input class="field" type="time" aria-label="${DAYS[i]} créneau ${j+2} heure de début" data-field="start" value="${escapeHtml(slot.start)}"><input class="field" type="time" aria-label="${DAYS[i]} créneau ${j+2} heure de fin" data-field="end" value="${escapeHtml(slot.end)}"><span class="slot-spacer"></span><input class="field code-input" type="text" maxlength="16" aria-label="${DAYS[i]} créneau ${j+2} code de tâche" data-field="code" value="${escapeHtml(slot.code)}"><span class="slot-detail">${slotDuration(slot)?fmt(slotDuration(slot)):""}</span><button class="remove-slot" type="button" data-remove-slot="${i}" data-slot-index="${j+1}" aria-label="Retirer le créneau ${j+2} du ${DAYS[i]}">×</button></div>`).join("");return rows}
-    function render(){const w=activeWeek(),start=dateAt(activeKey);$("#weekTitle").textContent=`Semaine ${weekNumber(start)}, ${start.getFullYear()}`;$("#weekDates").textContent=dateLabel(activeKey);$("#thresholdInput").value=db.threshold;
-      const daysEl=$("#schedule");daysEl.innerHTML=`<div class="day-row header" role="row"><span>Jour</span><span>Début</span><span>Fin</span><span>Pause · min</span><span>Code</span><span>Durée</span><span></span></div>`+
-       w.days.map((day,i)=>renderDayRows(day,i,start)).join("");
-       daysEl.querySelectorAll("input[data-field]").forEach(input=>input.addEventListener("input",e=>{const row=e.target.closest(".day-row[data-day]"),i=Number(row.dataset.day),slotIndex=Number(row.dataset.slotIndex)||0,field=e.target.dataset.field,day=activeWeek().days[i];if(field==="break")day.break=Math.max(0,Number(e.target.value)||0);else{const slots=daySlots(day);while(slots.length<=slotIndex)slots.push(blankSlot());slots[slotIndex][field]=field==="code"?e.target.value.toUpperCase():e.target.value;day.slots=slots}render();const newEl=$(`[data-day="${i}"][data-slot-index="${slotIndex}"] [data-field="${field}"]`);if(newEl){newEl.focus();if(newEl.setSelectionRange&&field==="code")newEl.setSelectionRange(newEl.value.length,newEl.value.length)}saveDb()}));
-       daysEl.querySelectorAll("[data-add-slot]").forEach(b=>b.addEventListener("click",()=>{const i=Number(b.dataset.addSlot),day=activeWeek().days[i],slots=daySlots(day);slots.push(blankSlot());day.slots=slots;saveDb();render();$(`[data-day="${i}"][data-slot-index="${slots.length-1}"] [data-field="start"]`)?.focus()}));
-       daysEl.querySelectorAll("[data-remove-slot]").forEach(b=>b.addEventListener("click",()=>{const i=Number(b.dataset.removeSlot),slotIndex=Number(b.dataset.slotIndex);activeWeek().days[i].slots.splice(slotIndex,1);saveDb();render()}));
-      daysEl.querySelectorAll("[data-clear]").forEach(b=>b.addEventListener("click",()=>{activeWeek().days[Number(b.dataset.clear)]=blankDay();saveDb();render()}));
-      const mins=w.days.reduce((s,d)=>s+duration(d),0),limit=Math.max(0,Number(db.threshold)||15)*60,workDays=w.days.filter(d=>duration(d)>0).length;
-      $("#weekTotal").innerHTML=`${Math.floor(mins/60)}<small>h</small>${String(mins%60).padStart(2,"0")}`;$("#compactTotal").textContent=fmt(mins);$("#dailyAverage").textContent=`Sur ${workDays} journée${workDays>1?"s":""} travaillée${workDays>1?"s":""}`;
-      const over=mins>limit,fill=$("#meterFill");fill.style.width=`${limit?Math.min(100,mins/limit*100):100}%`;fill.classList.toggle("over",over);
-      $("#thresholdRight").textContent=fmt(limit);$("#thresholdStatus").textContent=over?`${fmt(mins-limit)} au-dessus du seuil`:`${fmt(Math.max(0,limit-mins))} disponibles`;
-      const alert=$("#thresholdAlert");alert.classList.add("visible");alert.classList.toggle("success",!over);$("#thresholdHeading").textContent=over?"Seuil dépassé":"Rien à signaler";$("#alertCopy").textContent=over?`${fmtLong(mins-limit)} au-dessus du seuil configuré.`:mins===limit?"Vous êtes exactement au seuil configuré.":`${fmtLong(limit-mins)} avant d’atteindre le seuil.`;$("#thresholdIcon").innerHTML=over?'<path d="M12 3 2.8 19h18.4L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 9v4m0 3h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>':'<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="m8 12 2.6 2.6L16 9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>';
+    function renderDayRows(day,i,start){
+      const d=new Date(start);d.setDate(d.getDate()+i);const info=dayInfo(day),slots=info.ordered,first=slots[0]||{slot:blankSlot(),index:0},work=info.grossMinutes>0,warning=info.warnings.length>0;
+      const makeSession=(entry,j)=>`<div class="day-row extra-slot-row ${warning?"warning-day":""}" role="row" data-day="${i}" data-slot-index="${entry.index}"><div class="extra-slot-label">Créneau ${j+2}</div><input class="field" type="time" aria-label="${DAYS[i]} créneau ${j+2} heure de début" data-field="start" value="${escapeHtml(entry.slot.start)}"><input class="field" type="time" aria-label="${DAYS[i]} créneau ${j+2} heure de fin" data-field="end" value="${escapeHtml(entry.slot.end)}"><span class="slot-spacer"></span><input class="field code-input" type="text" maxlength="16" aria-label="${DAYS[i]} créneau ${j+2} code de tâche" data-field="code" value="${escapeHtml(entry.slot.code)}"><span class="slot-detail">${slotDuration(entry.slot)?fmt(slotDuration(entry.slot)):""}</span><button class="remove-slot" type="button" data-remove-slot="${i}" data-slot-index="${entry.index}" aria-label="Retirer le créneau ${j+2} du ${DAYS[i]}">×</button></div>`;
+      const noteAfter=index=>{const p=info.periods.findIndex(period=>period.slotIndexes.at(-1)===index);if(p<0)return "";let note="";const period=info.periods[p],pause=automaticPause(period.minutes),cut=info.cuts.find(item=>item.afterPeriod===p);if(pause)note+=`<div class="day-row info-row pause-row"><span class="row-note">Pause automatique à déduire : ${pause} min pour ${fmt(period.minutes)} de travail continu.</span></div>`;if(cut)note+=`<div class="day-row info-row cut-row"><span class="row-note">Coupure : ${clockAt(cut.start)}–${clockAt(cut.end)} (${fmt(cut.minutes)}) · non comptée comme travail.</span></div>`;return note};
+      let rows=`<div class="day-row ${work?"work":""} ${warning?"warning-day":""}" role="row" data-day="${i}" data-slot-index="${first.index}"><div class="day-label"><span class="day-dot"></span><span><span class="day-name">${DAYS[i]}</span><span class="day-date">${new Intl.DateTimeFormat("fr-FR",{day:"numeric",month:"short"}).format(d)}</span><button class="add-slot" type="button" data-add-slot="${i}" aria-label="Ajouter une plage horaire le ${DAYS[i]}">+ créneau</button></span></div><input class="field" type="time" aria-label="${DAYS[i]} heure de début" data-field="start" value="${escapeHtml(first.slot.start)}"><input class="field" type="time" aria-label="${DAYS[i]} heure de fin" data-field="end" value="${escapeHtml(first.slot.end)}"><input class="field break" type="number" inputmode="numeric" min="0" max="600" step="5" aria-label="${DAYS[i]} pause saisie en plus en minutes" placeholder="0" data-field="break" value="${Number(day.break)||0}"><input class="field code-input" type="text" maxlength="16" aria-label="${DAYS[i]} code de tâche" placeholder="Repos" data-field="code" value="${escapeHtml(first.slot.code)}"><span class="duration ${work?"":"rest"}" aria-label="${work?fmtLong(info.netMinutes):"Repos"}">${work?fmt(info.netMinutes):"—"}</span><button class="clear-day" data-clear="${i}" title="Effacer ${DAYS[i]}" aria-label="Effacer les horaires de ${DAYS[i]}">×</button></div>`;
+      rows+=noteAfter(first.index);
+      slots.slice(1).forEach((entry,j)=>{rows+=makeSession(entry,j)+noteAfter(entry.index)});
+      if(warning)rows+=`<div class="day-row info-row warning-row"><span class="row-note">${info.warnings.map(escapeHtml).join(" · ")}</span></div>`;
+      return rows;
+    }
+    function render(){
+      const w=activeWeek(),start=dateAt(activeKey);$("#weekTitle").textContent=`Semaine ${weekNumber(start)}, ${start.getFullYear()}`;$("#weekDates").textContent=dateLabel(activeKey);$("#thresholdInput").value=db.threshold;
+      const daysEl=$("#schedule");daysEl.innerHTML=`<div class="day-row header" role="row"><span>Jour</span><span>Début</span><span>Fin</span><span>Pause + · min</span><span>Code</span><span>Durée nette</span><span></span></div>`+w.days.map((day,i)=>renderDayRows(day,i,start)).join("");
+      daysEl.querySelectorAll("input[data-field]").forEach(input=>input.addEventListener("input",e=>{const row=e.target.closest(".day-row[data-day]"),i=Number(row.dataset.day),slotIndex=Number(row.dataset.slotIndex)||0,field=e.target.dataset.field,day=activeWeek().days[i];if(field==="break")day.break=Math.max(0,Number(e.target.value)||0);else{const slots=daySlots(day);while(slots.length<=slotIndex)slots.push(blankSlot());slots[slotIndex][field]=field==="code"?e.target.value.toUpperCase():e.target.value;day.slots=slots}render();const newEl=$(`[data-day="${i}"][data-slot-index="${slotIndex}"] [data-field="${field}"]`);if(newEl){newEl.focus();if(newEl.setSelectionRange&&field==="code")newEl.setSelectionRange(newEl.value.length,newEl.value.length)}saveDb()}));
+      daysEl.querySelectorAll("[data-add-slot]").forEach(b=>b.addEventListener("click",()=>{const i=Number(b.dataset.addSlot),day=activeWeek().days[i],slots=daySlots(day);slots.push(blankSlot());day.slots=slots;saveDb();render();$(`[data-day="${i}"][data-slot-index="${slots.length-1}"] [data-field="start"]`)?.focus()}));
+      daysEl.querySelectorAll("[data-remove-slot]").forEach(b=>b.addEventListener("click",()=>{const i=Number(b.dataset.removeSlot),slotIndex=Number(b.dataset.slotIndex);activeWeek().days[i].slots.splice(slotIndex,1);saveDb();render()}));
+      daysEl.querySelectorAll("[data-clear]").forEach(b=>b.addEventListener("click",()=>{activeWeek().days[Number(b.dataset.clear)]=blankDay();const saved=saveDb();render();if(saved)notify("Horaires du jour effacés.")}));
+      const mins=w.days.reduce((sum,day)=>sum+duration(day),0),limit=Math.max(1,Number(db.threshold)||15)*60,workDays=w.days.filter(day=>dayInfo(day).grossMinutes>0).length,over=mins>limit,near=!over&&mins>=limit*.9,state=over?"over":near?"near":"good";
+      const total=$("#weekTotal");total.innerHTML=`${Math.floor(mins/60)}<small>h</small>${String(mins%60).padStart(2,"0")}`;total.classList.remove("good","near","over");total.classList.add(state);
+      const compact=$("#compactTotal");compact.textContent=fmt(mins);compact.classList.remove("good","near","over");compact.classList.add(state);$("#dailyAverage").textContent=`Sur ${workDays} journée${workDays>1?"s":""} travaillée${workDays>1?"s":""}`;
+      const fill=$("#meterFill");fill.style.width=`${Math.min(100,mins/limit*100)}%`;fill.classList.remove("good","near","over");fill.classList.add(state);
+      $("#thresholdRight").textContent=fmt(limit);$("#thresholdStatus").textContent=over?`${fmt(mins-limit)} au-dessus du seuil`:near?`${fmt(limit-mins)} restantes · seuil proche`:`${fmt(limit-mins)} disponibles`;
+      const alert=$("#thresholdAlert");alert.classList.add("visible");alert.classList.toggle("success",state==="good");alert.classList.toggle("near",near);$("#thresholdHeading").textContent=over?"Seuil dépassé":"Rien à signaler";$("#alertCopy").textContent=over?`${fmtLong(mins-limit)} au-dessus du seuil configuré.`:mins===limit?"Vous êtes exactement au seuil configuré.":near?`${fmtLong(limit-mins)} avant le seuil : vous en êtes proche.`:`${fmtLong(limit-mins)} avant d’atteindre le seuil.`;
+      $("#thresholdIcon").innerHTML=state!=="good"?'<path d="M12 3 2.8 19h18.4L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 9v4m0 3h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>':'<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="m8 12 2.6 2.6L16 9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>';
       renderSaved();
     }
-    function renderSaved(){const keys=Object.keys(db.weeks).sort().reverse();$("#savedCount").textContent=`${keys.length} semaine${keys.length!==1?"s":""}`;$("#savedList").innerHTML=keys.length?keys.map(k=>{const total=db.weeks[k].days.reduce((s,d)=>s+duration(d),0);const d=dateAt(k);return `<div class="saved-item ${k===activeKey?"active":""}"><button class="saved-select" data-load="${k}"><strong>Semaine ${weekNumber(d)}, ${d.getFullYear()}</strong><span>${dateLabel(k)}</span></button><span class="saved-hours">${fmt(total)}</span></div>`}).join(""):`<div class="saved-empty">Vos semaines enregistrées apparaîtront ici.</div>`;$("#savedList").querySelectorAll("[data-load]").forEach(b=>b.addEventListener("click",()=>{activeKey=b.dataset.load;render()}))}
-    function saveActive(){saveDb();render();notify("Semaine enregistrée sur cet appareil.")}
+    function weekHasEntries(week){return week.days.some(day=>daySlots(day).some(slot=>slot.start||slot.end||slot.code)||Number(day.break)>0)}
+    function renderSaved(){
+      const keys=Object.keys(db.weeks).sort().reverse(),limit=Math.max(1,Number(db.threshold)||15)*60;$("#savedCount").textContent=`${keys.length} semaine${keys.length!==1?"s":""}`;
+      $("#savedList").innerHTML=keys.length?keys.map(k=>{const total=db.weeks[k].days.reduce((sum,day)=>sum+duration(day),0),d=dateAt(k),tone=total>limit?"over":total>=limit*.9?"near":"good",label=`Semaine ${weekNumber(d)}, ${d.getFullYear()}`;return `<div class="saved-item ${k===activeKey?"active":""}"><button class="saved-select" data-load="${k}" aria-label="Ouvrir ${label}"><strong>${label}</strong><span>${dateLabel(k)}</span></button><div class="saved-item-actions"><span class="saved-hours ${tone}">${fmt(total)}</span><button class="saved-action" type="button" data-duplicate-week="${k}" title="Dupliquer vers la semaine suivante" aria-label="Dupliquer ${label} vers la semaine suivante">⧉</button><button class="saved-action delete" type="button" data-delete-week="${k}" title="Supprimer cette semaine" aria-label="Supprimer ${label}">×</button></div></div>`}).join(""):`<div class="saved-empty">Vos semaines enregistrées apparaîtront ici.</div>`;
+      $("#savedList").querySelectorAll("[data-load]").forEach(b=>b.addEventListener("click",()=>{activeKey=b.dataset.load;render()}));
+      $("#savedList").querySelectorAll("[data-duplicate-week]").forEach(b=>b.addEventListener("click",()=>duplicateWeekTo(b.dataset.duplicateWeek,nextWeekKey(b.dataset.duplicateWeek))));
+      $("#savedList").querySelectorAll("[data-delete-week]").forEach(b=>b.addEventListener("click",()=>deleteWeek(b.dataset.deleteWeek)));
+    }
+    function saveActive(){if(!saveDb())return;render();notify("Semaine enregistrée sur cet appareil.")}
     function navigate(delta){const d=dateAt(activeKey);d.setDate(d.getDate()+delta*7);activeKey=iso(d);ensureWeek(activeKey);saveDb();render()}
+    function nextWeekKey(key){const d=dateAt(key);d.setDate(d.getDate()+7);return iso(d)}
+    function duplicateWeekTo(sourceKey,targetKey){
+      const source=db.weeks[sourceKey];if(!source){notify("Cette semaine n’est plus disponible.");return}
+      if(sourceKey===targetKey){notify("Choisissez une autre semaine de destination.");return}
+      const target=db.weeks[targetKey];if(target&&weekHasEntries(target)&&!confirm(`Remplacer les horaires de la semaine du ${dateLabel(targetKey)} ?`))return;
+      db.weeks[targetKey]={start:targetKey,days:source.days.map(day=>({slots:daySlots(day).map(slot=>({...slot})),break:Math.max(0,Number(day.break)||0)}))};activeKey=targetKey;const saved=saveDb();render();if(saved)notify(`Semaine dupliquée vers le ${dateLabel(targetKey)}.`);
+    }
+    function duplicatePreviousWeek(){const previous=dateAt(activeKey);previous.setDate(previous.getDate()-7);const sourceKey=iso(previous);if(!db.weeks[sourceKey]){notify("Aucune semaine précédente enregistrée à dupliquer.");return}duplicateWeekTo(sourceKey,activeKey)}
+    function deleteWeek(key){
+      if(!db.weeks[key])return;
+      if(!confirm(`Supprimer la semaine du ${dateLabel(key)} ? Cette action est définitive.`))return;
+      delete db.weeks[key];let remain=Object.keys(db.weeks).sort();if(!remain.length){db.weeks[DEFAULT_START]={start:DEFAULT_START,days:Array.from({length:7},blankDay)};remain=[DEFAULT_START]}
+      if(activeKey===key)activeKey=remain[remain.length-1];const saved=saveDb();render();if(saved)notify("Semaine supprimée.");
+    }
+    function promptNewWeek(){const raw=prompt("Date du lundi de la semaine (AAAA-MM-JJ) :",activeKey);if(!raw)return;const d=dateAt(raw);if(Number.isNaN(d.getTime())||iso(d)!==raw){notify("Date invalide. Utilisez une date réelle au format AAAA-MM-JJ.");return}activeKey=weekKey(d);ensureWeek(activeKey);saveDb();render()}
     $("#prevWeek").addEventListener("click",()=>navigate(-1));$("#nextWeek").addEventListener("click",()=>navigate(1));
     $("#todayBtn").addEventListener("click",()=>{activeKey=weekKey(new Date());ensureWeek(activeKey);saveDb();render()});
+    $("#duplicatePrevBtn").addEventListener("click",duplicatePreviousWeek);
     $("#saveWeekBtn").addEventListener("click",saveActive);
     $("#thresholdInput").addEventListener("change",e=>{db.threshold=Math.min(60,Math.max(1,Number(e.target.value)||15));saveDb();render()});
-    $("#newWeekBtn").addEventListener("click",()=>{const raw=prompt("Date du lundi de la semaine (AAAA-MM-JJ) :",activeKey);if(!raw)return;const d=dateAt(raw);if(Number.isNaN(d.getTime())){notify("Date invalide. Utilisez le format AAAA-MM-JJ.");return}activeKey=weekKey(d);ensureWeek(activeKey);saveDb();render()});
-    $("#deleteWeekBtn").addEventListener("click",()=>{if(!confirm(`Supprimer la semaine du ${dateLabel(activeKey)} ?`))return;delete db.weeks[activeKey];const remain=Object.keys(db.weeks).sort();activeKey=remain[remain.length-1]||DEFAULT_START;ensureWeek(activeKey);saveDb();render();notify("Semaine supprimée.")});
+    $("#newWeekBtn").addEventListener("click",promptNewWeek);$("#heroNewWeekBtn").addEventListener("click",promptNewWeek);
+    $("#heroOpenBtn").addEventListener("click",()=>$("#savedPanel").scrollIntoView({behavior:"smooth",block:"center"}));
+    $("#resetWeekBtn").addEventListener("click",()=>$("#resetDialog").showModal());
+    $("#closeReset").addEventListener("click",()=>$("#resetDialog").close());$("#cancelReset").addEventListener("click",()=>$("#resetDialog").close());
+    $("#confirmReset").addEventListener("click",()=>{activeWeek().days=Array.from({length:7},blankDay);const saved=saveDb();$("#resetDialog").close();render();if(saved)notify("Planning réinitialisé.")});
+    $("#deleteWeekBtn").addEventListener("click",()=>deleteWeek(activeKey));
     $("#backupBtn").addEventListener("click",()=>{saveDb();const blob=new Blob([JSON.stringify({app:"Planning Carrefour",version:1,exportedAt:new Date().toISOString(),...db},null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="planning-carrefour-sauvegarde.json";a.click();URL.revokeObjectURL(a.href);notify("Sauvegarde JSON téléchargée.")});
     $("#restoreBtn").addEventListener("click",()=>$("#backupFile").click());
-    $("#backupFile").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text()),weeks=data.weeks;if(!weeks||typeof weeks!=="object")throw Error("format");for(const [key,w] of Object.entries(weeks)){if(!/^\d{4}-\d{2}-\d{2}$/.test(key)||!Array.isArray(w.days)||w.days.length!==7)throw Error("format")}if(!confirm("Remplacer vos semaines locales par cette sauvegarde ?"))return;const normalizedWeeks=Object.fromEntries(Object.entries(weeks).map(([key,week])=>[key,{...week,days:week.days.map(normalizeDay)}]));db={threshold:Number(data.threshold)||15,weeks:normalizedWeeks};activeKey=Object.keys(normalizedWeeks).sort().reverse()[0]||DEFAULT_START;saveDb();render();notify("Sauvegarde restaurée.")}catch(err){notify("Fichier JSON invalide ou non compatible.")}finally{e.target.value=""}});
+    $("#backupFile").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text()),weeks=data.weeks;if(!weeks||typeof weeks!=="object")throw Error("format");for(const [key,w] of Object.entries(weeks)){if(!/^\d{4}-\d{2}-\d{2}$/.test(key)||!Array.isArray(w.days)||w.days.length!==7)throw Error("format")}if(!confirm("Remplacer vos semaines locales par cette sauvegarde ?"))return;const normalizedWeeks=Object.fromEntries(Object.entries(weeks).map(([key,week])=>[key,{...week,days:week.days.map(normalizeDay)}]));db={threshold:Number(data.threshold)||15,weeks:normalizedWeeks};activeKey=Object.keys(normalizedWeeks).sort().reverse()[0]||DEFAULT_START;const saved=saveDb();render();if(saved)notify("Sauvegarde restaurée.")}catch(err){notify("Fichier JSON invalide ou non compatible.")}finally{e.target.value=""}});
     $("#printBtn").addEventListener("click",()=>window.print());
+    const helpDlg=$("#helpDialog");$("#helpBtn").addEventListener("click",()=>helpDlg.showModal());$("#closeHelp").addEventListener("click",()=>helpDlg.close());$("#doneHelp").addEventListener("click",()=>helpDlg.close());
+    helpDlg.addEventListener("click",e=>{if(e.target===helpDlg)helpDlg.close()});
     const dlg=$("#ocrDialog");
     function openDialog(){dlg.showModal()}
-    $("#openOcrBtn").addEventListener("click",openDialog);$("#ocrAgainBtn").addEventListener("click",openDialog);
+    $("#openOcrBtn").addEventListener("click",openDialog);$("#ocrAgainBtn").addEventListener("click",openDialog);$("#heroImportBtn").addEventListener("click",openDialog);
     $("#closeOcr").addEventListener("click",()=>dlg.close());$("#cancelOcr").addEventListener("click",()=>dlg.close());
     $("#imageFile").addEventListener("change",e=>{pendingImage=e.target.files[0]||null;if(pendingImage){$("#uploadLabel").textContent=pendingImage.name;$("#ocrStatus").firstChild.textContent="Image prête à lire.";$("#runOcrBtn").disabled=false;$("#ocrReview").classList.remove("visible");$("#applyOcrBtn").disabled=true}});
     const upload=$("#imageFile"),uploadBox=$(".upload-box");uploadBox.addEventListener("dragover",e=>{e.preventDefault();uploadBox.style.borderColor="var(--green)"});uploadBox.addEventListener("dragleave",()=>uploadBox.style.borderColor="");uploadBox.addEventListener("drop",e=>{e.preventDefault();uploadBox.style.borderColor="";const f=e.dataTransfer.files[0];if(f&&f.type.startsWith("image/")){pendingImage=f;$("#uploadLabel").textContent=f.name;$("#ocrStatus").firstChild.textContent="Image prête à lire.";$("#runOcrBtn").disabled=false;$("#ocrReview").classList.remove("visible");$("#applyOcrBtn").disabled=true}});
@@ -337,10 +473,10 @@
     function startFromOcr(text){const range=text.match(/(?:du\s*)?(\d{1,2})\s*[./-]\s*(\d{1,2})\s*[./-]\s*(\d{4})\s*(?:au|à|[-–])\s*(\d{1,2})\s*[./-]\s*(\d{1,2})\s*[./-]\s*(\d{4})/i);if(range){const d=new Date(Number(range[3]),Number(range[2])-1,Number(range[1]),12);if(!Number.isNaN(d.getTime())&&d.getDate()===Number(range[1])&&d.getMonth()===Number(range[2])-1)return iso(mondayOf(d))}const week=text.match(/\bsemaine\s*(\d{1,2})\s*(?:de|du)?\s*(\d{4})\b/i);if(week){const year=Number(week[2]),n=Number(week[1]),jan4=new Date(year,0,4,12),monday=new Date(jan4);monday.setDate(jan4.getDate()-((jan4.getDay()+6)%7)+(n-1)*7);if(n>=1&&n<=53)return iso(monday)}return null}
     function parseOcr(text){const lines=text.split(/\n+/).map(s=>s.trim()).filter(Boolean),out=Array.from({length:7},blankDay),start=startFromOcr(text),anchor=dateAt(start||activeKey),aliases=[["lundi","lun"],["mardi","mar"],["mercredi","mer"],["jeudi","jeu"],["vendredi","ven"],["samedi","sam"],["dimanche","dim"]];let found=0,currentDay=-1;function dayIndex(line){const lower=line.toLowerCase();let ix=-1;aliases.forEach((list,i)=>{if(ix<0&&list.some(a=>new RegExp(`\\b${a}`,"i").test(lower)))ix=i});if(ix>=0)return ix;const short=line.match(/^\s*([LMJVSD])\s*0?(\d{1,2})\b/i);if(short){const dayNumber=Number(short[2]);for(let i=0;i<7;i++){const d=new Date(anchor);d.setDate(d.getDate()+i);if(d.getDate()===dayNumber)return i}return ({L:0,M:1,J:3,V:4,S:5,D:6}[short[1].toUpperCase()]??-1)}return -1}function codeAfter(times,index){const time=times[index],next=times[index+1],tail=time.source.slice(time.endIndex,next?next.index:time.source.length),match=tail.match(/\b([A-Z][A-Z0-9]{2,10})\b/i),code=match?match[1].toUpperCase():"";return code==="REPOS"?"":code}function addTimes(dayIndex,times){times.forEach((time,i)=>out[dayIndex].slots.push({start:time.start,end:time.end,code:codeAfter(times,i)}));found+=times.length}lines.forEach(line=>{const detectedDay=dayIndex(line);if(detectedDay>=0)currentDay=detectedDay;const times=parseTimeRanges(line);if(!times.length)return;const target=detectedDay>=0?detectedDay:currentDay;if(target>=0)addTimes(target,times)});if(found<1){const times=parseTimeRanges(text);times.slice(0,7).forEach((time,i)=>out[i].slots.push({start:time.start,end:time.end,code:codeAfter(times,i)}));found=Math.min(times.length,7)}return {days:out,found,start}}
       $("#runOcrBtn").addEventListener("click",async()=>{if(!pendingImage)return;const btn=$("#runOcrBtn"),status=$("#ocrStatus"),progress=$("#ocrProgress");btn.disabled=true;status.firstChild.textContent="Chargement du moteur OCR…";progress.style.width="3%";try{const T=await getTesseract();status.firstChild.textContent="Lecture de l’image…";const result=await T.recognize(pendingImage,"fra",{logger:m=>{if(m.status==="recognizing text")progress.style.width=`${Math.round(m.progress*100)}%`;else if(m.status==="loading language traineddata")status.firstChild.textContent="Chargement du français…"}});recognizedText=result.data.text||"";const parsed=parseOcr(recognizedText);$("#ocrWeekStart").value=parsed.start||activeKey;renderOcrReview(parsed.days);$("#ocrText").textContent=`Texte détecté : ${recognizedText.slice(0,700)}${recognizedText.length>700?"…":""}`;status.firstChild.textContent=`Lecture terminée · ${parsed.found} plage${parsed.found!==1?"s":""} horaire${parsed.found!==1?"s":""} proposée${parsed.found!==1?"s":""}. Vérifiez tout avant application.`;$("#ocrReview").classList.add("visible");$("#applyOcrBtn").disabled=false;if(!parsed.found)notify("Aucun horaire détecté avec certitude. Ajoutez ou saisissez les plages dans la vérification.")}catch(err){status.firstChild.textContent=`Lecture impossible : ${err.message||"erreur inconnue"}`;notify("La lecture OCR n’a pas abouti.")}finally{btn.disabled=false}});
-     function renderOcrReview(days){ocrDraft=days.map(day=>({slots:daySlots(day).map(slot=>({start:slot.start||"",end:slot.end||"",code:slot.code||""})),break:Math.max(0,Number(day.break)||0)}));$("#ocrGrid").innerHTML=ocrDraft.map((day,i)=>`<div class="ocr-day" data-ocr-day="${i}"><div class="ocr-day-top"><span>${DAYS[i]}</span><button class="button ocr-add-slot" type="button" data-ocr-add="${i}" aria-label="Ajouter une plage au ${DAYS[i]}">+ plage</button></div><div class="ocr-slot-list">${day.slots.length?day.slots.map((slot,j)=>`<div class="ocr-slot" data-ocr-slot="${j}"><div class="ocr-fields"><label>Début<input type="time" data-ocr="start" aria-label="${DAYS[i]} plage ${j+1} début" value="${escapeHtml(slot.start)}"></label><label>Fin<input type="time" data-ocr="end" aria-label="${DAYS[i]} plage ${j+1} fin" value="${escapeHtml(slot.end)}"></label><label>Tâche / code<input type="text" maxlength="16" data-ocr="code" aria-label="${DAYS[i]} plage ${j+1} tâche ou code" value="${escapeHtml(slot.code)}"></label></div><button class="ocr-remove-slot" type="button" data-ocr-remove="${i}" data-slot-index="${j}" aria-label="Retirer la plage ${j+1} du ${DAYS[i]}">×</button></div>`).join(""):`<p class="ocr-no-shifts">Aucune plage détectée</p>`}</div><label class="ocr-break">Pause supplémentaire à déduire · min <input type="number" min="0" step="5" data-ocr="break" aria-label="${DAYS[i]} pause supplémentaire en minutes" value="${day.break}"></label></div>`).join("")}
+    function renderOcrReview(days){ocrDraft=days.map(day=>({slots:daySlots(day).map(slot=>({start:slot.start||"",end:slot.end||"",code:slot.code||""})),break:Math.max(0,Number(day.break)||0)}));$("#ocrGrid").innerHTML=ocrDraft.map((day,i)=>`<div class="ocr-day" data-ocr-day="${i}"><div class="ocr-day-top"><span>${DAYS[i]}</span><button class="button ocr-add-slot" type="button" data-ocr-add="${i}" aria-label="Ajouter une plage au ${DAYS[i]}">+ plage</button></div><div class="ocr-slot-list">${day.slots.length?day.slots.map((slot,j)=>`<div class="ocr-slot" data-ocr-slot="${j}"><div class="ocr-fields"><label>Début<input type="time" data-ocr="start" aria-label="${DAYS[i]} plage ${j+1} début" value="${escapeHtml(slot.start)}"></label><label>Fin<input type="time" data-ocr="end" aria-label="${DAYS[i]} plage ${j+1} fin" value="${escapeHtml(slot.end)}"></label><label>Tâche / code<input type="text" maxlength="16" data-ocr="code" aria-label="${DAYS[i]} plage ${j+1} tâche ou code" value="${escapeHtml(slot.code)}"></label></div><button class="ocr-remove-slot" type="button" data-ocr-remove="${i}" data-slot-index="${j}" aria-label="Retirer la plage ${j+1} du ${DAYS[i]}">×</button></div>`).join(""):`<p class="ocr-no-shifts">Aucune plage détectée</p>`}</div><label class="ocr-break">Pause saisie en plus · min <input type="number" inputmode="numeric" min="0" step="5" data-ocr="break" aria-label="${DAYS[i]} pause saisie en plus en minutes" value="${day.break}"></label></div>`).join("")}
      $("#ocrGrid").addEventListener("input",e=>{const target=e.target,card=target.closest("[data-ocr-day]");if(!card)return;const dayIndex=Number(card.dataset.ocrDay),field=target.dataset.ocr;if(field==="break"){ocrDraft[dayIndex].break=Math.max(0,Number(target.value)||0);return}const slotRow=target.closest("[data-ocr-slot]");if(!slotRow||!field)return;const slotIndex=Number(slotRow.dataset.ocrSlot);ocrDraft[dayIndex].slots[slotIndex][field]=field==="code"?target.value.toUpperCase():target.value;if(field==="code")target.value=target.value.toUpperCase()});
      $("#ocrGrid").addEventListener("click",e=>{const add=e.target.closest("[data-ocr-add]");if(add){const i=Number(add.dataset.ocrAdd);ocrDraft[i].slots.push(blankSlot());renderOcrReview(ocrDraft);return}const remove=e.target.closest("[data-ocr-remove]");if(remove){const i=Number(remove.dataset.ocrRemove),j=Number(remove.dataset.slotIndex);ocrDraft[i].slots.splice(j,1);renderOcrReview(ocrDraft)}});
-      $("#applyOcrBtn").addEventListener("click",()=>{const selected=$("#ocrWeekStart").value;if(!selected){notify("Choisissez le lundi de la semaine avant d’appliquer.");return}activeKey=weekKey(dateAt(selected));activeWeek().days=ocrDraft.map(day=>({slots:day.slots.map(slot=>({start:slot.start,end:slot.end,code:slot.code})),break:Math.max(0,Number(day.break)||0)}));saveDb();render();dlg.close();notify("Proposition appliquée. Vérifiez les horaires dans le planning.");});
+      $("#applyOcrBtn").addEventListener("click",()=>{const selected=$("#ocrWeekStart").value;if(!selected){notify("Choisissez le lundi de la semaine avant d’appliquer.");return}activeKey=weekKey(dateAt(selected));activeWeek().days=ocrDraft.map(day=>({slots:day.slots.map(slot=>({start:slot.start,end:slot.end,code:slot.code})),break:Math.max(0,Number(day.break)||0)}));const saved=saveDb();render();dlg.close();if(saved)notify("Proposition appliquée. Vérifiez les horaires dans le planning.");});
     render();
   })();
   </script>

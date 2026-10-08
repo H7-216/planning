@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f3f5ef">
   <meta name="description" content="Votre planning hebdomadaire Carrefour, privé et enregistré sur cet appareil.">
-  <link rel="icon" type="image/PNG" href="Planning.PNG">
-    <link rel="apple-touch-icon" href="Planning.PNG">
   <title>Planning Carrefour — Mon espace</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%2321634e'/%3E%3Cpath d='M32 14v36M14 32h36' stroke='white' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E">
   <style>
@@ -181,7 +179,8 @@
     .ocr-break{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:9px;color:var(--muted)}
     .ocr-break input{width:76px;height:30px;border:1px solid var(--line);border-radius:6px;padding:0 7px}
     .ocr-no-shifts{margin:2px 0;color:#8a948d;font-size:10px}
-    .ocr-source{font-size:10px;color:var(--muted);margin:12px 0}
+    .ocr-source-title{font-size:10px;font-weight:700;color:var(--ink);margin:14px 0 5px}
+    .ocr-source{font-family:inherit;font-size:10px;line-height:1.55;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere;max-height:190px;overflow:auto;margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#f7f8f4}
     .dialog-foot{padding:12px 21px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
     .help-content{padding:20px 22px;display:grid;gap:14px}
     .help-content h3{font-size:12px;margin:0 0 5px;color:var(--green)}
@@ -297,7 +296,7 @@
       <input class="hidden" type="file" id="imageFile" accept="image/*">
       <div class="ocr-meta">Confidentialité : la photo reste dans votre navigateur. Tesseract.js et les données de langue française sont chargés depuis un CDN uniquement lorsque vous lancez la lecture ; une connexion internet est nécessaire. L’ajout manuel reste disponible hors ligne.</div>
       <div class="ocr-controls"><div class="ocr-status" id="ocrStatus">Aucune image sélectionnée.<div class="ocr-progress"><div id="ocrProgress"></div></div></div><button class="button button-primary" id="runOcrBtn" disabled>Lancer la lecture</button></div>
-      <div class="ocr-review" id="ocrReview"><div class="side-title"><h3>Vérifier les horaires proposés</h3><span class="count-pill">À confirmer</span></div><label style="display:flex;align-items:center;gap:10px;margin:12px 0;font-size:12px;color:var(--muted)">Lundi de la semaine détectée <input id="ocrWeekStart" type="date" aria-label="Lundi de la semaine détectée"></label><div class="ocr-grid" id="ocrGrid"></div><p class="ocr-source" id="ocrText"></p></div>
+      <div class="ocr-review" id="ocrReview"><div class="side-title"><h3>Vérifier les horaires proposés</h3><span class="count-pill">À confirmer</span></div><label style="display:flex;align-items:center;gap:10px;margin:12px 0;font-size:12px;color:var(--muted)">Lundi de la semaine détectée <input id="ocrWeekStart" type="date" aria-label="Lundi de la semaine détectée"></label><div class="ocr-grid" id="ocrGrid"></div><p class="ocr-source-title">Texte détecté, organisé par jour</p><pre class="ocr-source" id="ocrText" aria-live="polite"></pre></div>
     </div>
     <div class="dialog-foot"><button class="button" id="cancelOcr">Annuler</button><button class="button button-primary" id="applyOcrBtn" disabled>Appliquer à cette semaine</button></div>
   </dialog>
@@ -473,11 +472,119 @@
     async function getTesseract(){if(window.Tesseract)return window.Tesseract;await new Promise((resolve,reject)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";s.onload=resolve;s.onerror=()=>reject(Error("Impossible de charger Tesseract.js. Vérifiez votre connexion."));document.head.appendChild(s)});return window.Tesseract}
     function parseTimeRanges(text){const normalized=text.replace(/[–—]/g,"-").replace(/[hH](?=\d)/g,":").replace(/(\d{1,2})[hH](?!\d)/g,"$1:00");const re=/\b([01]?\d|2[0-3])\s*[:.]\s*([0-5]\d)\s*(?:-|à|\/|→)\s*([01]?\d|2[0-3])\s*[:.]\s*([0-5]\d)\b/g;return [...normalized.matchAll(re)].map(m=>({start:`${m[1].padStart(2,"0")}:${m[2]}`,end:`${m[3].padStart(2,"0")}:${m[4]}`,raw:m[0],index:m.index,endIndex:m.index+m[0].length,source:normalized}))}
     function startFromOcr(text){const range=text.match(/(?:du\s*)?(\d{1,2})\s*[./-]\s*(\d{1,2})\s*[./-]\s*(\d{4})\s*(?:au|à|[-–])\s*(\d{1,2})\s*[./-]\s*(\d{1,2})\s*[./-]\s*(\d{4})/i);if(range){const d=new Date(Number(range[3]),Number(range[2])-1,Number(range[1]),12);if(!Number.isNaN(d.getTime())&&d.getDate()===Number(range[1])&&d.getMonth()===Number(range[2])-1)return iso(mondayOf(d))}const week=text.match(/\bsemaine\s*(\d{1,2})\s*(?:de|du)?\s*(\d{4})\b/i);if(week){const year=Number(week[2]),n=Number(week[1]),jan4=new Date(year,0,4,12),monday=new Date(jan4);monday.setDate(jan4.getDate()-((jan4.getDay()+6)%7)+(n-1)*7);if(n>=1&&n<=53)return iso(monday)}return null}
-    function parseOcr(text){const lines=text.split(/\n+/).map(s=>s.trim()).filter(Boolean),out=Array.from({length:7},blankDay),start=startFromOcr(text),anchor=dateAt(start||activeKey),aliases=[["lundi","lun"],["mardi","mar"],["mercredi","mer"],["jeudi","jeu"],["vendredi","ven"],["samedi","sam"],["dimanche","dim"]];let found=0,currentDay=-1;function dayIndex(line){const lower=line.toLowerCase();let ix=-1;aliases.forEach((list,i)=>{if(ix<0&&list.some(a=>new RegExp(`\\b${a}`,"i").test(lower)))ix=i});if(ix>=0)return ix;const short=line.match(/^\s*([LMJVSD])\s*0?(\d{1,2})\b/i);if(short){const dayNumber=Number(short[2]);for(let i=0;i<7;i++){const d=new Date(anchor);d.setDate(d.getDate()+i);if(d.getDate()===dayNumber)return i}return ({L:0,M:1,J:3,V:4,S:5,D:6}[short[1].toUpperCase()]??-1)}return -1}function codeAfter(times,index){const time=times[index],next=times[index+1],tail=time.source.slice(time.endIndex,next?next.index:time.source.length),match=tail.match(/\b([A-Z][A-Z0-9]{2,10})\b/i),code=match?match[1].toUpperCase():"";return code==="REPOS"?"":code}function addTimes(dayIndex,times){times.forEach((time,i)=>out[dayIndex].slots.push({start:time.start,end:time.end,code:codeAfter(times,i)}));found+=times.length}lines.forEach(line=>{const detectedDay=dayIndex(line);if(detectedDay>=0)currentDay=detectedDay;const times=parseTimeRanges(line);if(!times.length)return;const target=detectedDay>=0?detectedDay:currentDay;if(target>=0)addTimes(target,times)});if(found<1){const times=parseTimeRanges(text);times.slice(0,7).forEach((time,i)=>out[i].slots.push({start:time.start,end:time.end,code:codeAfter(times,i)}));found=Math.min(times.length,7)}return {days:out,found,start}}
-      $("#runOcrBtn").addEventListener("click",async()=>{if(!pendingImage)return;const btn=$("#runOcrBtn"),status=$("#ocrStatus"),progress=$("#ocrProgress");btn.disabled=true;status.firstChild.textContent="Chargement du moteur OCR…";progress.style.width="3%";try{const T=await getTesseract();status.firstChild.textContent="Lecture de l’image…";const result=await T.recognize(pendingImage,"fra",{logger:m=>{if(m.status==="recognizing text")progress.style.width=`${Math.round(m.progress*100)}%`;else if(m.status==="loading language traineddata")status.firstChild.textContent="Chargement du français…"}});recognizedText=result.data.text||"";const parsed=parseOcr(recognizedText);$("#ocrWeekStart").value=parsed.start||activeKey;renderOcrReview(parsed.days);$("#ocrText").textContent=`Texte détecté : ${recognizedText.slice(0,700)}${recognizedText.length>700?"…":""}`;status.firstChild.textContent=`Lecture terminée · ${parsed.found} plage${parsed.found!==1?"s":""} horaire${parsed.found!==1?"s":""} proposée${parsed.found!==1?"s":""}. Vérifiez tout avant application.`;$("#ocrReview").classList.add("visible");$("#applyOcrBtn").disabled=false;if(!parsed.found)notify("Aucun horaire détecté avec certitude. Ajoutez ou saisissez les plages dans la vérification.")}catch(err){status.firstChild.textContent=`Lecture impossible : ${err.message||"erreur inconnue"}`;notify("La lecture OCR n’a pas abouti.")}finally{btn.disabled=false}});
-    function renderOcrReview(days){ocrDraft=days.map(day=>({slots:daySlots(day).map(slot=>({start:slot.start||"",end:slot.end||"",code:slot.code||""})),break:Math.max(0,Number(day.break)||0)}));$("#ocrGrid").innerHTML=ocrDraft.map((day,i)=>`<div class="ocr-day" data-ocr-day="${i}"><div class="ocr-day-top"><span>${DAYS[i]}</span><button class="button ocr-add-slot" type="button" data-ocr-add="${i}" aria-label="Ajouter une plage au ${DAYS[i]}">+ plage</button></div><div class="ocr-slot-list">${day.slots.length?day.slots.map((slot,j)=>`<div class="ocr-slot" data-ocr-slot="${j}"><div class="ocr-fields"><label>Début<input type="time" data-ocr="start" aria-label="${DAYS[i]} plage ${j+1} début" value="${escapeHtml(slot.start)}"></label><label>Fin<input type="time" data-ocr="end" aria-label="${DAYS[i]} plage ${j+1} fin" value="${escapeHtml(slot.end)}"></label><label>Tâche / code<input type="text" maxlength="16" data-ocr="code" aria-label="${DAYS[i]} plage ${j+1} tâche ou code" value="${escapeHtml(slot.code)}"></label></div><button class="ocr-remove-slot" type="button" data-ocr-remove="${i}" data-slot-index="${j}" aria-label="Retirer la plage ${j+1} du ${DAYS[i]}">×</button></div>`).join(""):`<p class="ocr-no-shifts">Aucune plage détectée</p>`}</div><label class="ocr-break">Pause saisie en plus · min <input type="number" inputmode="numeric" min="0" step="5" data-ocr="break" aria-label="${DAYS[i]} pause saisie en plus en minutes" value="${day.break}"></label></div>`).join("")}
+    function splitOcrRows(text){
+      const markerPattern=/(?:^|\s)(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche|lun\.?|mar\.?|mer\.?|jeu\.?|ven\.?|sam\.?|dim\.?|[LMJVSD]\.?\s*\d{1,2}\b)(?=\s|$|[,;:])/gi,rows=[];
+      String(text||"").replace(/\r/g,"").split("\n").forEach(raw=>{
+        const line=raw.replace(/\s+/g," ").trim();if(!line)return;
+        const matches=[...line.matchAll(new RegExp(markerPattern.source,markerPattern.flags))];
+        if(!matches.length){rows.push(line);return}
+        const starts=matches.map(match=>match.index+match[0].search(/\S/));
+        if(starts[0]>0)rows.push(line.slice(0,starts[0]).trim());
+        starts.forEach((start,index)=>{const end=starts[index+1]??line.length;const part=line.slice(start,end).trim();if(part)rows.push(part)});
+      });
+      return rows;
+    }
+    function readOcrRow(line){
+      const normalized=line.normalize("NFD").replace(/[\u0300-\u036f]/g,""),word=normalized.match(/^\s*(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche|lun\.?|mar\.?|mer\.?|jeu\.?|ven\.?|sam\.?|dim\.?)(?=\s|$)/i);
+      const wordDays={lundi:0,lun:0,mardi:1,mar:1,mercredi:2,mer:2,jeudi:3,jeu:3,vendredi:4,ven:4,samedi:5,sam:5,dimanche:6,dim:6};
+      let dayCandidates=null,remaining=line;
+      if(word){const token=word[1].toLowerCase().replace(/\.$/,"");dayCandidates=[wordDays[token]];remaining=line.slice(word[0].length)}
+      else{
+        const initial=normalized.match(/^\s*([LMJVSD])(?![A-ZÀ-Þ])(?:[.)]?\s*)/i);
+        if(initial){const letter=initial[1].toUpperCase();dayCandidates=letter==="M"?[1,2]:[{L:0,J:3,V:4,S:5,D:6}[letter]];remaining=line.slice(initial[0].length)}
+      }
+      const dateMatch=remaining.match(/^\s*(\d{1,2})(?:[./-](\d{1,2})(?:[./-](\d{2,4}))?)?[.,]?(?=\s|$|[,;])/);
+      let date=null;
+      if(dateMatch){
+        const day=Number(dateMatch[1]),month=dateMatch[2]?Number(dateMatch[2]):null,year=dateMatch[3]?Number(dateMatch[3]):null;
+        if(day>=1&&day<=31&&(!month||month>=1&&month<=12)&&(!year||year>=1000||year>=0&&year<=99))date={day,month,year:year&&year<100?2000+year:year};
+      }else if(!dayCandidates){
+        const dateOnly=line.match(/^\s*(\d{1,2})(?:[./-](\d{1,2})(?:[./-](\d{2,4}))?)?[.,]?(?=\s|$|[,;])/);
+        if(dateOnly){const day=Number(dateOnly[1]),month=dateOnly[2]?Number(dateOnly[2]):null,year=dateOnly[3]?Number(dateOnly[3]):null;if(day>=1&&day<=31&&(!month||month>=1&&month<=12))date={day,month,year:year&&year<100?2000+year:year}}
+      }
+      const plain=normalized.toLowerCase(),times=parseTimeRanges(line);
+      return {line,dayCandidates,date,times,isRest:/\b(?:repos|repose|off|rtt|conge)\b/i.test(plain)};
+    }
+    function ocrDateMatches(date,parts){return date.getDate()===parts.day&&(!parts.month||date.getMonth()+1===parts.month)&&(!parts.year||date.getFullYear()===parts.year)}
+    function ocrDateAtWeek(anchor,index){const date=new Date(anchor);date.setDate(date.getDate()+index);return date}
+    function inferOcrWeekStart(rows){
+      const dated=rows.filter(row=>row.date);if(dated.length<4)return null;
+      const full=dated.find(row=>row.date.month&&row.date.year);
+      if(full){const exact=new Date(full.date.year,full.date.month-1,full.date.day,12);if(exact.getFullYear()===full.date.year&&exact.getMonth()===full.date.month-1&&exact.getDate()===full.date.day)return iso(mondayOf(exact))}
+      const base=dateAt(activeKey),seen=new Set();let best=null;
+      for(let shift=-366;shift<=366;shift++){
+        const nearby=new Date(base);nearby.setDate(nearby.getDate()+shift);const candidate=mondayOf(nearby),key=iso(candidate);if(seen.has(key))continue;seen.add(key);
+        let matches=0;
+        dated.forEach(row=>{const indices=row.dayCandidates||[0,1,2,3,4,5,6];if(indices.some(index=>ocrDateMatches(ocrDateAtWeek(candidate,index),row.date)))matches++});
+        const distance=Math.abs(candidate.getTime()-base.getTime());
+        if(!best||matches>best.matches||matches===best.matches&&distance<best.distance)best={key,matches,distance};
+      }
+      const minimum=Math.max(4,Math.ceil(dated.length*.75));
+      return best&&best.matches>=minimum?best.key:null;
+    }
+    function sameOcrDate(a,b){return !!a&&!!b&&a.day===b.day&&(!a.month||!b.month||a.month===b.month)&&(!a.year||!b.year||a.year===b.year)}
+    function nextOcrDate(a,b){return !!a&&!!b&&(b.day===a.day+1||b.day===1&&a.day>=28)}
+    function chooseOcrDay(row,anchor,currentDay,previousDate){
+      const candidates=row.dayCandidates,possible=candidates||[0,1,2,3,4,5,6];
+      if(row.date){
+        const matches=possible.filter(index=>ocrDateMatches(ocrDateAtWeek(anchor,index),row.date));
+        if(matches.length===1)return matches[0];
+        if(matches.length>1){if(currentDay>=0&&sameOcrDate(previousDate,row.date)&&matches.includes(currentDay))return currentDay;if(currentDay>=0&&nextOcrDate(previousDate,row.date)&&matches.includes(currentDay+1))return currentDay+1;return matches[0]}
+      }
+      if(candidates?.length===1)return candidates[0];
+      if(candidates?.length>1){
+        if(currentDay>=0&&row.date&&sameOcrDate(previousDate,row.date)&&candidates.includes(currentDay))return currentDay;
+        if(currentDay===0&&candidates.includes(1))return 1;
+        if(currentDay===1&&candidates.includes(2)&&(row.date?nextOcrDate(previousDate,row.date):true))return 2;
+        return candidates[0];
+      }
+      if(row.date&&currentDay>=0&&nextOcrDate(previousDate,row.date))return Math.min(6,currentDay+1);
+      return null;
+    }
+    function parseOcr(text){
+      const rows=splitOcrRows(text).map(readOcrRow),explicitStart=startFromOcr(text),inferredStart=explicitStart?null:inferOcrWeekStart(rows),start=explicitStart||inferredStart||activeKey,anchor=dateAt(start),out=Array.from({length:7},blankDay),recognizedDays=new Set(),dateByDay=new Map();
+      let found=0,currentDay=-1,previousDate=null;
+      function codeAfter(times,index){const time=times[index],next=times[index+1],tail=time.source.slice(time.endIndex,next?next.index:time.source.length),match=tail.match(/\b([A-Z][A-Z0-9]{2,10})\b/i),code=match?match[1].toUpperCase():"";return code==="REPOS"?"":code}
+      rows.forEach(row=>{
+        const detectedDay=chooseOcrDay(row,anchor,currentDay,previousDate);if(detectedDay!==null)currentDay=detectedDay;
+        const target=detectedDay!==null?detectedDay:currentDay;
+        if(target>=0&&(row.dayCandidates||row.date))recognizedDays.add(target);
+        if(target>=0&&row.date){dateByDay.set(target,String(row.date.day));previousDate=row.date}
+        if(target>=0&&row.times.length){
+          row.times.forEach((time,index)=>out[target].slots.push({start:time.start,end:time.end,code:codeAfter(row.times,index)}));
+          out[target].ocrRest=false;found+=row.times.length;recognizedDays.add(target);
+        }
+        if(target>=0&&row.isRest&&!out[target].slots.length){out[target].ocrRest=true;recognizedDays.add(target)}
+      });
+      if(found===0&&recognizedDays.size===0){
+        const unlabelled=parseTimeRanges(text);
+        unlabelled.slice(0,7).forEach((time,index)=>{out[index].slots.push({start:time.start,end:time.end,code:codeAfter(unlabelled,index)});recognizedDays.add(index)});
+        found=Math.min(unlabelled.length,7);
+      }
+      const letters=["L","M","M","J","V","S","D"],formattedText=out.map((day,index)=>{
+        const date=dateByDay.get(index)||String(ocrDateAtWeek(anchor,index).getDate()),shifts=day.slots.map(slot=>`${slot.start} - ${slot.end}${slot.code?` ${slot.code}`:""}`).join("  "),status=shifts||(day.ocrRest?"Repos":recognizedDays.has(index)?"Aucune plage détectée":"Non détecté");
+        return `${letters[index]} ${date}  ${status}`;
+      }).join("\n");
+      return {days:out,found,start,daysDetected:recognizedDays.size,formattedText,inferred:!!inferredStart};
+    }
+      $("#runOcrBtn").addEventListener("click",async()=>{
+        if(!pendingImage)return;
+        const btn=$("#runOcrBtn"),status=$("#ocrStatus"),progress=$("#ocrProgress");btn.disabled=true;status.firstChild.textContent="Chargement du moteur OCR…";progress.style.width="3%";
+        try{
+          const T=await getTesseract();status.firstChild.textContent="Lecture de l’image…";
+          const result=await T.recognize(pendingImage,"fra",{logger:m=>{if(m.status==="recognizing text")progress.style.width=`${Math.round(m.progress*100)}%`;else if(m.status==="loading language traineddata")status.firstChild.textContent="Chargement du français…"}});
+          recognizedText=result.data.text||"";const parsed=parseOcr(recognizedText);$("#ocrWeekStart").value=parsed.start||activeKey;
+          renderOcrReview(parsed.days);$("#ocrText").textContent=parsed.formattedText;
+          const estimate=parsed.inferred?" Le lundi a été estimé à partir des jours et dates détectés : vérifiez-le.":"";
+          status.firstChild.textContent=`Lecture terminée · ${parsed.found} plage${parsed.found!==1?"s":""} horaire${parsed.found!==1?"s":""} sur ${parsed.daysDetected} jour${parsed.daysDetected!==1?"s":""}. Texte regroupé une ligne par jour.${estimate} Vérifiez chaque plage avant de l’appliquer.`;
+          $("#ocrReview").classList.add("visible");$("#applyOcrBtn").disabled=false;
+          if(!parsed.found&&!parsed.daysDetected)notify("Aucun horaire ou jour reconnu avec certitude. Vérifiez le texte ou saisissez les plages manuellement.");
+        }catch(err){status.firstChild.textContent=`Lecture impossible : ${err.message||"erreur inconnue"}`;notify("La lecture OCR n’a pas abouti.")}
+        finally{btn.disabled=false}
+      });
+    function renderOcrReview(days){ocrDraft=days.map(day=>({slots:daySlots(day).map(slot=>({start:slot.start||"",end:slot.end||"",code:slot.code||""})),break:Math.max(0,Number(day.break)||0),ocrRest:!!day.ocrRest}));$("#ocrGrid").innerHTML=ocrDraft.map((day,i)=>`<div class="ocr-day" data-ocr-day="${i}"><div class="ocr-day-top"><span>${DAYS[i]}</span><button class="button ocr-add-slot" type="button" data-ocr-add="${i}" aria-label="Ajouter une plage au ${DAYS[i]}">+ plage</button></div><div class="ocr-slot-list">${day.slots.length?day.slots.map((slot,j)=>`<div class="ocr-slot" data-ocr-slot="${j}"><div class="ocr-fields"><label>Début<input type="time" data-ocr="start" aria-label="${DAYS[i]} plage ${j+1} début" value="${escapeHtml(slot.start)}"></label><label>Fin<input type="time" data-ocr="end" aria-label="${DAYS[i]} plage ${j+1} fin" value="${escapeHtml(slot.end)}"></label><label>Tâche / code<input type="text" maxlength="16" data-ocr="code" aria-label="${DAYS[i]} plage ${j+1} tâche ou code" value="${escapeHtml(slot.code)}"></label></div><button class="ocr-remove-slot" type="button" data-ocr-remove="${i}" data-slot-index="${j}" aria-label="Retirer la plage ${j+1} du ${DAYS[i]}">×</button></div>`).join(""):`<p class="ocr-no-shifts">${day.ocrRest?"Repos détecté — aucune plage prévue":"Aucune plage détectée"}</p>`}</div><label class="ocr-break">Pause saisie en plus · min <input type="number" inputmode="numeric" min="0" step="5" data-ocr="break" aria-label="${DAYS[i]} pause saisie en plus en minutes" value="${day.break}"></label></div>`).join("")}
      $("#ocrGrid").addEventListener("input",e=>{const target=e.target,card=target.closest("[data-ocr-day]");if(!card)return;const dayIndex=Number(card.dataset.ocrDay),field=target.dataset.ocr;if(field==="break"){ocrDraft[dayIndex].break=Math.max(0,Number(target.value)||0);return}const slotRow=target.closest("[data-ocr-slot]");if(!slotRow||!field)return;const slotIndex=Number(slotRow.dataset.ocrSlot);ocrDraft[dayIndex].slots[slotIndex][field]=field==="code"?target.value.toUpperCase():target.value;if(field==="code")target.value=target.value.toUpperCase()});
-     $("#ocrGrid").addEventListener("click",e=>{const add=e.target.closest("[data-ocr-add]");if(add){const i=Number(add.dataset.ocrAdd);ocrDraft[i].slots.push(blankSlot());renderOcrReview(ocrDraft);return}const remove=e.target.closest("[data-ocr-remove]");if(remove){const i=Number(remove.dataset.ocrRemove),j=Number(remove.dataset.slotIndex);ocrDraft[i].slots.splice(j,1);renderOcrReview(ocrDraft)}});
+      $("#ocrGrid").addEventListener("click",e=>{const add=e.target.closest("[data-ocr-add]");if(add){const i=Number(add.dataset.ocrAdd);ocrDraft[i].ocrRest=false;ocrDraft[i].slots.push(blankSlot());renderOcrReview(ocrDraft);return}const remove=e.target.closest("[data-ocr-remove]");if(remove){const i=Number(remove.dataset.ocrRemove),j=Number(remove.dataset.slotIndex);ocrDraft[i].slots.splice(j,1);renderOcrReview(ocrDraft)}});
       $("#applyOcrBtn").addEventListener("click",()=>{const selected=$("#ocrWeekStart").value;if(!selected){notify("Choisissez le lundi de la semaine avant d’appliquer.");return}activeKey=weekKey(dateAt(selected));activeWeek().days=ocrDraft.map(day=>({slots:day.slots.map(slot=>({start:slot.start,end:slot.end,code:slot.code})),break:Math.max(0,Number(day.break)||0)}));const saved=saveDb();render();dlg.close();if(saved)notify("Proposition appliquée. Vérifiez les horaires dans le planning.");});
     render();
   })();
